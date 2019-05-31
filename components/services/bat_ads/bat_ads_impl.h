@@ -49,6 +49,29 @@ class BatAdsImpl : public mojom::BatAds {
   void GenerateAdReportingNotificationResultEvent(
       const std::string& notification_info,
       int32_t event_type) override;
+  void GetAdsHistory(GetAdsHistoryCallback callback) override;
+  void ToggleAdThumbUp(const std::string& id,
+                       const std::string& creative_set_id,
+                       int action,
+                       ToggleAdThumbUpCallback callback) override;
+  void ToggleAdThumbDown(const std::string& id,
+                         const std::string& creative_set_id,
+                         int action,
+                         ToggleAdThumbUpCallback callback) override;
+  void ToggleAdOptInAction(const std::string& category,
+                           int action,
+                           ToggleAdOptInActionCallback callback) override;
+  void ToggleAdOptOutAction(const std::string& category,
+                            int action,
+                            ToggleAdOptOutActionCallback callback) override;
+  void ToggleSaveAd(const std::string& id,
+                    const std::string& creative_set_id,
+                    bool saved,
+                    ToggleSaveAdCallback callback) override;
+  void ToggleFlagAd(const std::string& id,
+                    const std::string& creative_set_id,
+                    bool flagged,
+                    ToggleFlagAdCallback callback) override;
 
  private:
   std::unique_ptr<BatAdsClientMojoBridge> bat_ads_client_mojo_proxy_;

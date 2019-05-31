@@ -34,6 +34,8 @@ class Client;
 class Bundle;
 class AdsServe;
 
+struct AdHistoryDetail;
+
 class AdsImpl : public Ads {
  public:
   explicit AdsImpl(AdsClient* ads_client);
@@ -84,6 +86,28 @@ class AdsImpl : public Ads {
 
   void SetConfirmationsIsReady(const bool is_ready) override;
 
+  std::map<std::string, std::vector<AdsHistory>> GetAdsHistory() override;
+
+  AdContent::LikeAction ToggleAdThumbUp(const std::string& id,
+                                        const std::string& creative_set_id,
+                                        AdContent::LikeAction action) override;
+  AdContent::LikeAction ToggleAdThumbDown(
+      const std::string& id,
+      const std::string& creative_set_id,
+      AdContent::LikeAction action) override;
+  CategoryContent::OptAction ToggleAdOptInAction(
+      const std::string& category,
+      CategoryContent::OptAction action) override;
+  CategoryContent::OptAction ToggleAdOptOutAction(
+      const std::string& category,
+      CategoryContent::OptAction action) override;
+  bool ToggleSaveAd(const std::string& id,
+                    const std::string& creative_set_id,
+                    bool saved) override;
+  bool ToggleFlagAd(const std::string& id,
+                    const std::string& creative_set_id,
+                    bool flagged) override;
+
   void ChangeLocale(const std::string& locale) override;
 
   void ClassifyPage(const std::string& url, const std::string& html) override;
@@ -117,6 +141,10 @@ class AdsImpl : public Ads {
   bool ShowAd(const AdInfo& ad_info, const std::string& category);
   bool HistoryRespectsRollingTimeConstraint(
       const std::deque<uint64_t> history,
+      const uint64_t seconds_window,
+      const uint64_t allowable_ad_count) const;
+  bool HistoryRespectsRollingTimeConstraint(
+      const std::deque<AdHistoryDetail> history,
       const uint64_t seconds_window,
       const uint64_t allowable_ad_count) const;
   bool IsAllowedToShowAds();
@@ -166,6 +194,9 @@ class AdsImpl : public Ads {
   void GenerateAdReportingFocusEvent(const FocusInfo& info);
   void GenerateAdReportingRestartEvent();
   void GenerateAdReportingSettingsEvent();
+
+  void GenerateAdsHistoryEntry(const NotificationInfo& notification_info,
+                               const ConfirmationType& type);
 
   bool IsNotificationFromSampleCatalog(const NotificationInfo& info) const;
 
