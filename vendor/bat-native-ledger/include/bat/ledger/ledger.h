@@ -37,6 +37,8 @@ extern bool short_retries;
 
 using PublisherBannerCallback =
     std::function<void(ledger::PublisherBannerPtr banner)>;
+using SetPublisherExcludeCallback = std::function<void(const std::string&,
+    ledger::PUBLISHER_EXCLUDE)>;
 using WalletAddressesCallback =
     std::function<void(std::map<std::string, std::string> addresses)>;
 using GetTransactionHistoryCallback =
@@ -188,7 +190,8 @@ class LEDGER_EXPORT Ledger {
 
   virtual void SetPublisherExclude(
       const std::string& publisher_id,
-      const ledger::PUBLISHER_EXCLUDE& exclude) = 0;
+      const ledger::PUBLISHER_EXCLUDE& exclude,
+      SetPublisherExcludeCallback callback) = 0;
 
   virtual void RestorePublishers() = 0;
 
