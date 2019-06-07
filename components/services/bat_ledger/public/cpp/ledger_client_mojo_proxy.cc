@@ -764,4 +764,32 @@ void LedgerClientMojoProxy::OnContributeUnverifiedPublishers(
                                                    publisher_name);
 }
 
+// static
+void LedgerClientMojoProxy::OnGetAllTransactions(
+    CallbackHolder<GetAllTransactionsCallback>* holder,
+    ledger::mojom::AllTransactionsPtr transactions,
+    uint32_t next_record) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(std::move(transactions), next_record);
+  delete holder;
+}
+
+void LedgerClientMojoProxy::GetAllTransactions(
+    const base::flat_map<std::string, std::string>& publisher_ac_txs,
+    int32_t month,
+    uint32_t year,
+    GetAllTransactionsCallback callback) {
+  // deleted in OnGetAllTransactions
+  auto* holder = new CallbackHolder<GetAllTransactionsCallback>(
+      AsWeakPtr(), std::move(callback));
+  ledger_client_->GetAllTransactions(
+      publisher_ac_txs,
+      month,
+      year,
+      std::bind(LedgerClientMojoProxy::OnGetAllTransactions,
+                holder,
+                _1,
+                _2));
+}
+
 }  // namespace bat_ledger

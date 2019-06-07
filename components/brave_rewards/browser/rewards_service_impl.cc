@@ -43,6 +43,7 @@
 #include "brave/components/brave_rewards/browser/auto_contribution_props.h"
 #include "brave/components/brave_rewards/browser/balance_report.h"
 #include "brave/components/brave_rewards/browser/content_site.h"
+#include "brave/components/brave_rewards/browser/monthly_statement.h"
 #include "brave/components/brave_rewards/browser/publisher_banner.h"
 #include "brave/components/brave_rewards/browser/publisher_info_database.h"
 #include "brave/components/brave_rewards/browser/rewards_fetcher_service_observer.h"
@@ -168,6 +169,34 @@ ContentSite PublisherInfoToContentSite(
   content_site.weight = publisher_info.weight;
   content_site.reconcile_stamp = publisher_info.reconcile_stamp;
   return content_site;
+}
+
+MonthlyStatementPublisher PublisherInfoToMonthlyStatement(
+    const ledger::PublisherInfo& publisher_info,
+    const ledger::mojom::ContributionInfo& contribution_info) {
+  MonthlyStatementPublisher monthly_statement_publisher(publisher_info.id);
+  monthly_statement_publisher.percentage = publisher_info.percent;
+  monthly_statement_publisher.verified = publisher_info.verified;
+  monthly_statement_publisher.excluded = publisher_info.excluded;
+  monthly_statement_publisher.name = publisher_info.name;
+  monthly_statement_publisher.url = publisher_info.url;
+  monthly_statement_publisher.provider = publisher_info.provider;
+  monthly_statement_publisher.favicon_url = publisher_info.favicon_url;
+  monthly_statement_publisher.id = publisher_info.id;
+  monthly_statement_publisher.reconcile_stamp = publisher_info.reconcile_stamp;
+  monthly_statement_publisher.probi = contribution_info.value;
+  monthly_statement_publisher.category = contribution_info.category;
+  monthly_statement_publisher.date = contribution_info.date;
+  return monthly_statement_publisher;
+}
+
+MonthlyTransaction TransactionInfoToMonthlyStatement(
+    const ledger::mojom::TransactionStatementInfoPtr transaction) {
+  MonthlyTransaction monthly_transaction;
+  monthly_transaction.probi = transaction->probi;
+  monthly_transaction.category = transaction->category;
+  monthly_transaction.date = transaction->date;
+  return monthly_transaction;
 }
 
 std::string URLMethodToRequestType(ledger::URL_METHOD method) {
@@ -2347,6 +2376,36 @@ ledger::PublisherInfoList GetOneTimeTipsOnFileTaskRunner(
   return list;
 }
 
+ledger::mojom::AllTransactionsPtr GetAllTransactionsOnFileTaskRunner(
+    PublisherInfoDatabase* backend,
+    const base::flat_map<std::string, std::string>& publisher_ac_txs,
+    int32_t month,
+    uint32_t year) {
+  ledger::mojom::AllTransactionsPtr all_transactions =
+      ledger::mojom::AllTransactions::New();
+  ledger::PublisherInfoList list;
+
+  if (!backend) {
+    return all_transactions;
+  }
+
+  backend->GetAllTransactions(&list, month, year);
+  if (!publisher_ac_txs.empty()) {
+    backend->GetAutoContributePublishersByKeys(
+        &list,
+        publisher_ac_txs,
+        month,
+        year);
+  }
+  std::vector<ledger::mojom::TransactionStatementInfoPtr> transactions;
+  backend->GetTransactionTypes(&transactions, month, year);
+
+  all_transactions->publishers = std::move(list);
+  all_transactions->transactions = std::move(transactions);
+
+  return all_transactions;
+}
+
 void RewardsServiceImpl::GetOneTimeTips(
     ledger::PublisherInfoListCallback callback) {
   base::PostTaskAndReplyWithResult(file_task_runner_.get(), FROM_HERE,
@@ -2357,6 +2416,20 @@ void RewardsServiceImpl::GetOneTimeTips(
                  callback));
 }
 
+void RewardsServiceImpl::GetAllTransactions(
+    const base::flat_map<std::string, std::string>& publisher_ac_txs,
+    int32_t month,
+    uint32_t year,
+    ledger::TransactionListCallback callback) {
+  base::PostTaskAndReplyWithResult(file_task_runner_.get(), FROM_HERE,
+      base::Bind(&GetAllTransactionsOnFileTaskRunner,
+                  publisher_info_backend_.get(),
+                  publisher_ac_txs, month, year),
+      base::Bind(&RewardsServiceImpl::OnGetAllTransactions,
+                  AsWeakPtr(),
+                  callback));
+}
+
 void RewardsServiceImpl::OnGetOneTimeTips(
     ledger::PublisherInfoListCallback callback,
     ledger::PublisherInfoList list) {
@@ -2365,6 +2438,16 @@ void RewardsServiceImpl::OnGetOneTimeTips(
   }
 
   callback(std::move(list), 0);
+}
+
+void RewardsServiceImpl::OnGetAllTransactions(
+    ledger::TransactionListCallback callback,
+    ledger::mojom::AllTransactionsPtr transactions) {
+  if (!Connected()) {
+    return;
+  }
+
+  callback(std::move(transactions), 0);
 }
 
 void RewardsServiceImpl::RemoveRecurringTip(const std::string& publisher_key) {
@@ -3251,6 +3334,61 @@ void RewardsServiceImpl::FetchBalance(FetchBalanceCallback callback) {
       base::BindOnce(&RewardsServiceImpl::OnFetchBalance,
                      AsWeakPtr(),
                      std::move(callback)));
+}
+
+void RewardsServiceImpl::OnGetMonthlyStatement(
+    GetMonthlyStatementListCallback callback,
+    ledger::mojom::MonthlyStatementsPtr monthly_statements) {
+  std::unique_ptr<MonthlyStatement> statement =
+      std::make_unique<MonthlyStatement>();
+
+  for (auto &publisher : monthly_statements->publishers) {
+    for (auto &contribution : publisher->contributions) {
+      statement->publishers.push_back(PublisherInfoToMonthlyStatement(
+        *publisher,
+        *contribution));
+    }
+  }
+
+  for (auto& transaction : monthly_statements->transactions) {
+    statement->transactions.push_back(
+        TransactionInfoToMonthlyStatement(
+        std::move(transaction)));
+  }
+  std::unique_ptr<BalanceReport> balance_report =
+      std::make_unique<BalanceReport>();
+  statement->report.opening_balance =
+      monthly_statements->balance_report->opening_balance;
+  statement->report.closing_balance =
+      monthly_statements->balance_report->closing_balance;
+  statement->report.grants = monthly_statements->balance_report->grants;
+  statement->report.earning_from_ads =
+      monthly_statements->balance_report->earning_from_ads;
+  statement->report.auto_contribute =
+      monthly_statements->balance_report->auto_contribute;
+  statement->report.recurring_donation =
+      monthly_statements->balance_report->recurring_donation;
+  statement->report.one_time_donation =
+      monthly_statements->balance_report->one_time_donation;
+  statement->report.total = monthly_statements->balance_report->total;
+
+  statement->months_available = monthly_statements->months_available;
+
+  statement->reconcile_stamp = monthly_statements->reconcile_stamp;
+  std::move(callback).Run(std::move(statement));
+}
+
+void RewardsServiceImpl::GetMonthlyStatements(
+  int32_t month,
+  uint32_t year,
+  GetMonthlyStatementListCallback callback) {
+  if (!Connected()) {
+    return;
+  }
+  bat_ledger_->GetAllTransactions(month, year,
+      base::BindOnce(&RewardsServiceImpl::OnGetMonthlyStatement,
+          AsWeakPtr(),
+          std::move(callback)));
 }
 
 }  // namespace brave_rewards

@@ -7,6 +7,7 @@
 #include <streambuf>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "brave/components/brave_rewards/browser/publisher_info_database.h"
 
@@ -1201,6 +1202,366 @@ TEST_F(PublisherInfoDatabaseTest, RemoveAllPendingContributions) {
   bool success = publisher_info_database_->RemoveAllPendingContributions();
   EXPECT_TRUE(success);
   EXPECT_EQ(CountTableRows("pending_contribution"), 0);
+}
+
+TEST_F(PublisherInfoDatabaseTest, GetAllTransactions) {
+  base::ScopedTempDir temp_dir;
+  base::FilePath db_file;
+  CreateTempDatabase(&temp_dir, &db_file);
+
+  ledger::PublisherInfo publisher_info;
+  publisher_info.id = "brave.com";
+  publisher_info.verified = false;
+  publisher_info.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info.name = "name";
+  publisher_info.url = "https://brave.com";
+  publisher_info.provider = "";
+  publisher_info.favicon_url = "0";
+  bool success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info;
+  contribution_info.probi = "123";
+  contribution_info.month = ledger::ACTIVITY_MONTH::JANUARY;
+  contribution_info.year = 1970;
+  contribution_info.category = ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE;
+  contribution_info.date = base::Time::Now().ToJsTime();
+  contribution_info.publisher_key = "brave.com";
+
+  success = publisher_info_database_->InsertContributionInfo(contribution_info);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info2;
+  publisher_info2.id = "brave2.com";
+  publisher_info2.verified = false;
+  publisher_info2.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info2.name = "name";
+  publisher_info2.url = "https://brave_test.com";
+  publisher_info2.provider = "";
+  publisher_info2.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info2);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info2;
+  contribution_info2.probi = "456";
+  contribution_info2.month = ledger::ACTIVITY_MONTH::AUGUST;
+  contribution_info2.year = 1972;
+  contribution_info2.category = ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE;
+  contribution_info2.date = base::Time::Now().ToJsTime();
+  contribution_info2.publisher_key = "brave2.com";
+
+  success =
+      publisher_info_database_->InsertContributionInfo(contribution_info2);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info3;
+  publisher_info3.id = "brave3.com";
+  publisher_info3.verified = false;
+  publisher_info3.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info3.name = "name";
+  publisher_info3.url = "https://brave.com";
+  publisher_info3.provider = "";
+  publisher_info3.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info3);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info3;
+  contribution_info3.probi = "789";
+  contribution_info3.month = ledger::ACTIVITY_MONTH::MARCH;
+  contribution_info3.year = 1973;
+  contribution_info3.category = ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE;
+  contribution_info3.date = base::Time::Now().ToJsTime();
+  contribution_info3.publisher_key = "brave3.com";
+
+  success =
+      publisher_info_database_->InsertContributionInfo(contribution_info3);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info4;
+  publisher_info4.id = "brave4.com";
+  publisher_info4.verified = false;
+  publisher_info4.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info4.name = "name";
+  publisher_info4.url = "https://brave.com";
+  publisher_info4.provider = "";
+  publisher_info4.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info4);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfoList select_list;
+  publisher_info_database_->GetAllTransactions(&select_list, 3, 1973);
+  EXPECT_EQ(static_cast<int>(select_list.size()), 1);
+  EXPECT_EQ(select_list.at(0)->id, "brave3.com");
+  EXPECT_EQ(select_list.at(0)->url, "https://brave.com");
+  EXPECT_EQ(select_list.at(0)->contributions[0]->value, 789);
+
+  select_list.clear();
+  publisher_info_database_->GetAllTransactions(&select_list, 8, 1972);
+  EXPECT_EQ(select_list.at(0)->id, "brave2.com");
+  EXPECT_EQ(select_list.at(0)->url, "https://brave_test.com");
+  EXPECT_EQ(select_list.at(0)->contributions[0]->value, 456);
+
+  select_list.clear();
+  publisher_info_database_->GetAllTransactions(&select_list, 1, 1970);
+  EXPECT_EQ(select_list.at(0)->id, "brave.com");
+  EXPECT_EQ(select_list.at(0)->url, "https://brave.com");
+  EXPECT_EQ(select_list.at(0)->contributions[0]->value, 123);
+}
+
+TEST_F(PublisherInfoDatabaseTest, GetTransactionTypes) {
+  base::ScopedTempDir temp_dir;
+  base::FilePath db_file;
+  CreateTempDatabase(&temp_dir, &db_file);
+
+  ledger::PublisherInfo publisher_info;
+  publisher_info.id = "brave.com";
+  publisher_info.verified = false;
+  publisher_info.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info.name = "name";
+  publisher_info.url = "https://brave.com";
+  publisher_info.provider = "";
+  publisher_info.favicon_url = "0";
+  bool success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info;
+  contribution_info.probi = "123";
+  contribution_info.month = ledger::ACTIVITY_MONTH::JANUARY;
+  contribution_info.year = 1970;
+  contribution_info.category = ledger::REWARDS_CATEGORY::ONE_TIME_TIP;
+  contribution_info.date = base::Time::Now().ToJsTime();
+  contribution_info.publisher_key = "brave.com";
+
+  success = publisher_info_database_->InsertContributionInfo(contribution_info);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info2;
+  publisher_info2.id = "brave2.com";
+  publisher_info2.verified = false;
+  publisher_info2.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info2.name = "name";
+  publisher_info2.url = "https://brave_test.com";
+  publisher_info2.provider = "";
+  publisher_info2.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info2);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info2;
+  contribution_info2.probi = "789";
+  contribution_info2.month = ledger::ACTIVITY_MONTH::MARCH;
+  contribution_info2.year = 1973;
+  contribution_info2.category = ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE;
+  contribution_info2.date = base::Time::Now().ToJsTime();
+  contribution_info2.publisher_key = "brave2.com";
+
+  success =
+      publisher_info_database_->InsertContributionInfo(contribution_info2);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info3;
+  publisher_info3.id = "brave3.com";
+  publisher_info3.verified = false;
+  publisher_info3.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info3.name = "name";
+  publisher_info3.url = "https://brave.com";
+  publisher_info3.provider = "";
+  publisher_info3.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info3);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info3;
+  contribution_info3.probi = "789";
+  contribution_info3.month = ledger::ACTIVITY_MONTH::MARCH;
+  contribution_info3.year = 1973;
+  contribution_info3.category = ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE;
+  contribution_info3.date = contribution_info2.date;
+  contribution_info3.publisher_key = "brave3.com";
+
+  success =
+      publisher_info_database_->InsertContributionInfo(contribution_info3);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info4;
+  publisher_info4.id = "brave4.com";
+  publisher_info4.verified = false;
+  publisher_info4.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info4.name = "name";
+  publisher_info4.url = "https://brave.com";
+  publisher_info4.provider = "";
+  publisher_info4.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info4);
+  EXPECT_TRUE(success);
+
+  std::vector<ledger::mojom::TransactionStatementInfoPtr> select_list;
+  publisher_info_database_->GetTransactionTypes(&select_list, 3, 1973);
+  EXPECT_EQ(static_cast<int>(select_list.size()), 1);
+  EXPECT_EQ(select_list.at(0)->probi, "789");
+  EXPECT_EQ(select_list.at(0)->category,
+      ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE);
+
+  select_list.clear();
+  publisher_info_database_->GetTransactionTypes(&select_list, 1, 1970);
+  EXPECT_EQ(select_list.at(0)->probi, "123");
+  EXPECT_EQ(select_list.at(0)->category,
+      ledger::REWARDS_CATEGORY::ONE_TIME_TIP);
+}
+
+TEST_F(PublisherInfoDatabaseTest, GetAutoContributePublishersByKeys) {
+  base::ScopedTempDir temp_dir;
+  base::FilePath db_file;
+  CreateTempDatabase(&temp_dir, &db_file);
+
+  ledger::PublisherInfo publisher_info;
+  publisher_info.id = "brave.com";
+  publisher_info.verified = false;
+  publisher_info.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info.name = "name";
+  publisher_info.url = "https://brave.com";
+  publisher_info.provider = "";
+  publisher_info.favicon_url = "0";
+  bool success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info);
+  EXPECT_TRUE(success);
+
+  publisher_info.duration = 20;
+  publisher_info.score = 20;
+  publisher_info.percent = 20;
+  publisher_info.weight = 0.20;
+  publisher_info.reconcile_stamp = 20;
+  publisher_info.visits = 20;
+
+  success =
+      publisher_info_database_->InsertOrUpdateActivityInfo(publisher_info);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info;
+  contribution_info.probi = "123";
+  contribution_info.month = ledger::ACTIVITY_MONTH::JANUARY;
+  contribution_info.year = 1970;
+  contribution_info.category = ledger::REWARDS_CATEGORY::ONE_TIME_TIP;
+  contribution_info.date = 1227600;
+  contribution_info.publisher_key = "brave.com";
+
+  success = publisher_info_database_->InsertContributionInfo(contribution_info);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info2;
+  publisher_info2.id = "brave2.com";
+  publisher_info2.verified = false;
+  publisher_info2.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info2.name = "name";
+  publisher_info2.url = "https://brave_test.com";
+  publisher_info2.provider = "";
+  publisher_info2.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info2);
+  EXPECT_TRUE(success);
+
+  publisher_info.duration = 20;
+  publisher_info.score = 20;
+  publisher_info.percent = 20;
+  publisher_info.weight = 0.20;
+  publisher_info.reconcile_stamp = 20;
+  publisher_info.visits = 20;
+
+  success =
+      publisher_info_database_->InsertOrUpdateActivityInfo(publisher_info2);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info2;
+  contribution_info2.probi = "789";
+  contribution_info2.month = ledger::ACTIVITY_MONTH::AUGUST;
+  contribution_info2.year = 1972;
+  contribution_info2.category = ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE;
+  contribution_info2.date = 82699200;
+  contribution_info2.publisher_key = "brave2.com";
+
+  success =
+      publisher_info_database_->InsertContributionInfo(contribution_info2);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info3;
+  publisher_info3.id = "brave3.com";
+  publisher_info3.verified = false;
+  publisher_info3.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info3.name = "name";
+  publisher_info3.url = "https://brave.com";
+  publisher_info3.provider = "";
+  publisher_info3.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info3);
+  EXPECT_TRUE(success);
+
+  publisher_info.duration = 20;
+  publisher_info.score = 20;
+  publisher_info.percent = 20;
+  publisher_info.weight = 0.20;
+  publisher_info.reconcile_stamp = 20;
+  publisher_info.visits = 20;
+
+  success =
+      publisher_info_database_->InsertOrUpdateActivityInfo(publisher_info);
+  EXPECT_TRUE(success);
+
+  ContributionInfo contribution_info3;
+  contribution_info3.probi = "789";
+  contribution_info3.month = ledger::ACTIVITY_MONTH::MARCH;
+  contribution_info3.year = 1973;
+  contribution_info3.category = ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE;
+  contribution_info3.date = base::Time::Now().ToJsTime();
+  contribution_info3.publisher_key = "brave3.com";
+
+  success =
+      publisher_info_database_->InsertContributionInfo(contribution_info3);
+  EXPECT_TRUE(success);
+
+  ledger::PublisherInfo publisher_info4;
+  publisher_info4.id = "brave4.com";
+  publisher_info4.verified = false;
+  publisher_info4.excluded = ledger::PUBLISHER_EXCLUDE::DEFAULT;
+  publisher_info4.name = "name";
+  publisher_info4.url = "https://brave.com";
+  publisher_info4.provider = "";
+  publisher_info4.favicon_url = "0";
+  success =
+      publisher_info_database_->InsertOrUpdatePublisherInfo(publisher_info4);
+  EXPECT_TRUE(success);
+
+  publisher_info.duration = 20;
+  publisher_info.score = 20;
+  publisher_info.percent = 20;
+  publisher_info.weight = 0.20;
+  publisher_info.reconcile_stamp = 20;
+  publisher_info.visits = 20;
+
+  success =
+      publisher_info_database_->InsertOrUpdateActivityInfo(publisher_info);
+  EXPECT_TRUE(success);
+
+  base::flat_map<std::string, std::string> keys;
+  keys.insert(std::make_pair("brave2.com", "789"));
+  keys.insert(std::make_pair("brave4.com", "321"));
+  keys.insert(std::make_pair("brave.com", "123"));
+
+  ledger::PublisherInfoList select_list;
+  publisher_info_database_->GetAutoContributePublishersByKeys(
+      &select_list, keys, 3, 1973);
+  EXPECT_EQ(static_cast<int>(select_list.size()), 0);
+
+  select_list.clear();
+  publisher_info_database_->GetAllTransactions(&select_list, 1, 1970);
+  EXPECT_EQ(static_cast<int>(select_list.size()), 1);
+  EXPECT_EQ(select_list.at(0)->id, "brave.com");
+  EXPECT_EQ(select_list.at(0)->url, "https://brave.com");
+  EXPECT_EQ(select_list.at(0)->contributions[0]->value, 123);
 }
 
 }  // namespace brave_rewards

@@ -168,6 +168,11 @@ class MockRewardsService : public RewardsService {
   MOCK_METHOD2(SaveRedditPublisherInfo,
              void(const std::map<std::string, std::string>&,
                   brave_rewards::SaveMediaInfoCallback));
+
+  MOCK_METHOD3(GetMonthlyStatements, void(
+      int32_t month,
+      uint32_t year,
+      brave_rewards::GetMonthlyStatementListCallback callback));
 };
 
 class AdsServiceTest : public testing::Test {

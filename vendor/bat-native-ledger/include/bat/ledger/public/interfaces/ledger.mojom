@@ -4,9 +4,10 @@
 module ledger.mojom;
 
 struct ContributionInfo {
-  string publisher;  // Filled only for recurrent tips
+  string publisher;
   double value;
   uint64 date;
+  uint32 category;
 };
 
 struct PublisherInfo {
@@ -39,6 +40,18 @@ struct PublisherBanner {
   string provider;
   map<string, string> social;
   bool verified;
+};
+
+struct BalanceReport {
+  string opening_balance ;
+  string closing_balance;
+  string deposits;
+  string grants;
+  string earning_from_ads;
+  string auto_contribute;
+  string recurring_donation;
+  string one_time_donation;
+  string total;
 };
 
 struct PendingContribution {
@@ -103,4 +116,23 @@ struct AutoContributeProps {
   bool contribution_non_verified;
   bool contribution_videos;
   uint64 reconcile_stamp;
+};
+
+struct TransactionStatementInfo {
+  string probi;
+  uint64 date;
+  int32 category;
+};
+
+struct MonthlyStatements {
+  array<PublisherInfo> publishers;
+  BalanceReport balance_report;
+  array<string> months_available;
+  uint64 reconcile_stamp;
+  array<TransactionStatementInfo> transactions;
+};
+
+struct AllTransactions {
+  array<PublisherInfo> publishers;
+  array<TransactionStatementInfo> transactions;
 };

@@ -73,6 +73,8 @@ using RemovePendingContributionCallback = std::function<void(Result)>;
 using PendingContributionsTotalCallback = std::function<void(double)>;
 using GetCountryCodesCallback =
     std::function<void(const std::vector<int32_t>&)>;
+using TransactionListCallback =
+    std::function<void(ledger::mojom::AllTransactionsPtr, uint32_t)>;
 
 class LEDGER_EXPORT LedgerClient {
  public:
@@ -245,6 +247,12 @@ class LEDGER_EXPORT LedgerClient {
       ledger::Result result,
       const std::string& publisher_key,
       const std::string& publisher_name) = 0;
+
+  virtual void GetAllTransactions(
+      const base::flat_map<std::string, std::string>& publisher_ac_txs,
+      int32_t month,
+      uint32_t year,
+      ledger::TransactionListCallback callback) = 0;
 };
 
 }  // namespace ledger

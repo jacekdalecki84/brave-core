@@ -17,18 +17,22 @@
 #include "base/memory/weak_ptr.h"
 #include "base/time/time.h"
 #include "base/i18n/time_formatting.h"
+#include "base/strings/utf_string_conversions.h"
 #include "brave/components/brave_ads/browser/ads_service.h"
 #include "brave/components/brave_ads/browser/ads_service_factory.h"
 #include "brave/components/brave_ads/browser/buildflags/buildflags.h"
 #include "brave/components/brave_rewards/browser/rewards_service.h"
 #include "brave/components/brave_rewards/browser/wallet_properties.h"
-#include "brave/components/brave_rewards/browser/balance_report.h"
+#include "brave/components/brave_rewards/browser/monthly_statement.h"
 #include "brave/components/brave_rewards/browser/rewards_notification_service.h"
 #include "brave/components/brave_rewards/browser/rewards_notification_service_observer.h"
 #include "brave/components/brave_rewards/browser/rewards_service_factory.h"
 #include "brave/components/brave_rewards/browser/rewards_service_observer.h"
 #include "brave/common/webui_url_constants.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/webui/print_preview/print_preview_ui.h"
+#include "chrome/browser/ui/webui/print_preview/printer_handler.h"
+#include "chrome/browser/ui/webui/print_preview/sticky_settings.h"
 #include "content/public/browser/web_ui_data_source.h"
 #include "content/public/browser/web_ui_message_handler.h"
 #include "content/public/browser/web_contents.h"
@@ -136,6 +140,7 @@ class RewardsDOMHandler : public WebUIMessageHandler,
   void OnFetchBalance(
     int32_t result,
     std::unique_ptr<brave_rewards::Balance> balance);
+  void GetMonthlyStatements(const base::ListValue* args);
 
   // RewardsServiceObserver implementation
   void OnWalletInitialized(brave_rewards::RewardsService* rewards_service,
@@ -214,6 +219,9 @@ class RewardsDOMHandler : public WebUIMessageHandler,
       brave_rewards::RewardsNotificationService* rewards_notification_service,
       const brave_rewards::RewardsNotificationService::RewardsNotificationsList&
           notifications_list) override;
+
+  void OnGetMonthlyStatements(
+      std::unique_ptr<brave_rewards::MonthlyStatement> monthly_statement);
 
   brave_rewards::RewardsService* rewards_service_;  // NOT OWNED
   brave_ads::AdsService* ads_service_;
@@ -338,6 +346,9 @@ void RewardsDOMHandler::RegisterMessages() {
       base::Unretained(this)));
   web_ui()->RegisterMessageCallback("brave_rewards.fetchBalance",
       base::BindRepeating(&RewardsDOMHandler::FetchBalance,
+      base::Unretained(this)));
+  web_ui()->RegisterMessageCallback("brave_rewards.getMonthlyStatements",
+      base::BindRepeating(&RewardsDOMHandler::GetMonthlyStatements,
       base::Unretained(this)));
 }
 
@@ -1293,6 +1304,84 @@ void RewardsDOMHandler::FetchBalance(const base::ListValue* args) {
           &RewardsDOMHandler::OnFetchBalance,
           weak_factory_.GetWeakPtr()));
   }
+}
+
+void RewardsDOMHandler::OnGetMonthlyStatements(
+    std::unique_ptr<brave_rewards::MonthlyStatement> monthly_statement) {
+  if (web_ui()->CanCallJavascript()) {
+    base::Value monthly(base::Value::Type::DICTIONARY);
+
+    base::Value statements(base::Value::Type::LIST);
+    for (const auto& item : monthly_statement->publishers) {
+      base::Value statement(base::Value::Type::DICTIONARY);
+      statement.SetStringKey("id", item.id);
+      statement.SetStringKey("publisherKey", item.id);
+      statement.SetStringKey("percentage", std::to_string(item.percentage));
+      statement.SetBoolKey("verified", item.verified);
+      statement.SetBoolKey("excluded", item.excluded);
+      statement.SetStringKey("name", item.name);
+      statement.SetStringKey("provider", item.provider);
+      statement.SetStringKey("url", item.url);
+      statement.SetStringKey("faviconUrl", item.favicon_url);
+      statement.SetStringKey("date", std::to_string(item.date));
+      statement.SetIntKey("category", item.category);
+      statement.SetStringKey("probi", std::to_string(item.probi));
+      statement.SetStringKey("reconcileStamp",
+          std::to_string(item.reconcile_stamp));
+      statements.GetList().push_back(std::move(statement));
+    }
+    monthly.SetKey("statementItems", base::Value(std::move(statements)));
+
+    base::Value transactions(base::Value::Type::LIST);
+    for (const auto& tx : monthly_statement->transactions) {
+      base::Value transaction(base::Value::Type::DICTIONARY);
+      transaction.SetStringKey("probi", tx.probi);
+      transaction.SetStringKey("date", std::to_string(tx.date));
+      transaction.SetIntKey("category", tx.category);
+      transactions.GetList().push_back(std::move(transaction));
+    }
+    monthly.SetKey("transactions", base::Value(std::move(transactions)));
+
+    base::Value report(base::Value::Type::DICTIONARY);
+    report.SetStringKey("opening", monthly_statement->report.opening_balance);
+    report.SetStringKey("closing", monthly_statement->report.closing_balance);
+    report.SetStringKey("grant", monthly_statement->report.grants);
+    report.SetStringKey("ads", monthly_statement->report.earning_from_ads);
+    report.SetStringKey("contribute",
+        monthly_statement->report.auto_contribute);
+    report.SetStringKey("donation",
+        monthly_statement->report.recurring_donation);
+    report.SetStringKey("tips", monthly_statement->report.one_time_donation);
+    report.SetStringKey("total", monthly_statement->report.total);
+    monthly.SetKey("balanceReport", base::Value(std::move(report)));
+
+    base::Value months(base::Value::Type::LIST);
+    for (const std::string& month : monthly_statement->months_available) {
+      months.GetList().push_back(base::Value(month));
+    }
+    monthly.SetKey("monthsAvailable", base::Value(std::move(months)));
+
+    monthly.SetStringKey("reconcileStamp",
+        std::to_string(monthly_statement->reconcile_stamp));
+
+    web_ui()->CallJavascriptFunctionUnsafe(
+         "brave_rewards.onGetMonthlyStatements",
+         std::move(monthly));
+  }
+}
+
+void RewardsDOMHandler::GetMonthlyStatements(const base::ListValue* args) {
+  CHECK_EQ(2U, args->GetSize());
+  if (!rewards_service_) {
+    return;
+  }
+  int32_t month = args->GetList()[0].GetInt();
+  int32_t year = args->GetList()[1].GetInt();
+  rewards_service_->GetMonthlyStatements(
+      month,
+      (uint32_t)year,
+      base::BindOnce(&RewardsDOMHandler::OnGetMonthlyStatements,
+          weak_factory_.GetWeakPtr()));
 }
 
 }  // namespace

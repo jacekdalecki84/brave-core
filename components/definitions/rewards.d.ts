@@ -56,6 +56,15 @@ declare namespace Rewards {
     excludedList: ExcludedPublisher[]
     firstLoad: boolean | null
     grants?: Grant[]
+    hasMonthlyStatement: boolean
+    monthlyStatement: {
+      statementItems: StatementItem[],
+      balanceReport: Report,
+      monthsAvailable: string[],
+      reconcileStamp: string,
+      transactions: MonthlyTransaction[]
+    }
+    monthsAvailable?: string[]
     pendingContributions: PendingContribution[]
     pendingContributionTotal: number
     reconcileStamp: number
@@ -86,6 +95,8 @@ declare namespace Rewards {
   }
 
   export type GrantStatus = 'wrongPosition' | 'grantGone' | 'generalError' | 'grantAlreadyClaimed' | number | null
+
+  export type SummaryType = 'deposit' | 'grant' | 'ads' | 'contribute' | 'recurring' | 'donations'
 
   export interface Grant {
     promotionId?: string
@@ -139,6 +150,35 @@ declare namespace Rewards {
     favIcon: string
     id: string
     tipDate?: number
+  }
+
+  export interface StatementItem {
+    id: string,
+    verified: boolean
+    excluded: boolean
+    name: string
+    faviconUrl: string
+    url: string
+    provider: string
+    probi: string
+    category: number
+    date: string
+    percentage: string
+    reconcileStamp: string
+  }
+
+  export interface MonthlyTransaction {
+    probi: string
+    date: string
+    category: number
+  }
+
+  export interface MonthlyStatement {
+    statementItems: StatementItem[]
+    balanceReport: Report
+    monthsAvailable: string[]
+    reconcileStamp: string
+    transactions: MonthlyTransaction[]
   }
 
   export interface ExcludedPublisher {
@@ -207,5 +247,11 @@ declare namespace Rewards {
     total: number
     rates: Record<string, number>
     wallets: Record<string, number>
+  }
+
+  export interface Contribution {
+    publisherKey: string
+    value: number
+    date: number
   }
 }

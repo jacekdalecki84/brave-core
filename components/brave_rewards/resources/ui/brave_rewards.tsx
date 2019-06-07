@@ -173,6 +173,10 @@ window.cr.define('brave_rewards', function () {
     }
   }
 
+  function onGetMonthlyStatements (monthlyStatement: Rewards.MonthlyStatement) {
+    getActions().onGetMonthlyStatements(monthlyStatement)
+  }
+
   function excludedSiteChanged () {
     getActions().getExcludedSites()
     getActions().getContributeList()
@@ -223,7 +227,8 @@ window.cr.define('brave_rewards', function () {
     onRemovePendingContribution,
     excludedSiteChanged,
     balance,
-    reconcileComplete
+    reconcileComplete,
+    onGetMonthlyStatements
   }
 })
 

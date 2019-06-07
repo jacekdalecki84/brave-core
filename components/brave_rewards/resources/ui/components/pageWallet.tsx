@@ -10,7 +10,7 @@ import {
   ModalActivity,
   ModalBackupRestore,
   ModalPending,
-  WalletEmpty,
+  PrintableActivity,
   WalletSummary,
   WalletWrapper
 } from 'brave-ui/features/rewards'
@@ -18,6 +18,8 @@ import { WalletAddIcon } from 'brave-ui/components/icons'
 import { AlertWallet } from 'brave-ui/features/rewards/walletWrapper'
 import { Provider } from 'brave-ui/features/rewards/profile'
 import { DetailRow as PendingDetailRow, PendingType } from 'brave-ui/features/rewards/tablePending'
+import { DetailRow as ContributeRows } from 'brave-ui/features/rewards/tableContribute'
+import { DetailRow as TransactionRow, TransactionType } from 'brave-ui/features/rewards/tableTransactions'
 // Utils
 import { getLocale } from '../../../../common/locale'
 import * as rewardsActions from '../actions/rewards_actions'
@@ -36,6 +38,7 @@ interface State {
 }
 
 interface Props extends Rewards.ComponentProps {
+  isPrint: boolean
 }
 
 class PageWallet extends React.Component<Props, State> {
@@ -57,6 +60,9 @@ class PageWallet extends React.Component<Props, State> {
   componentDidMount () {
     this.isAddFundsUrl()
     this.isBackupUrl()
+    if (this.props.isPrint) {
+      window.print()
+    }
   }
 
   onModalBackupClose = () => {
@@ -346,6 +352,262 @@ class PageWallet extends React.Component<Props, State> {
     this.actions.removeAllPendingContribution()
   }
 
+  getMonthlyStatementTransaction = (): TransactionRow[] => {
+    const { monthlyStatement, balance } = this.props.rewardsData
+    const transactions = monthlyStatement.transactions
+    return transactions.map((item: Rewards.MonthlyTransaction) => {
+      const amount = utils.convertProbiToFixed(item.probi)
+      switch (item.category) {
+        case 2:  // auto-contribute
+          const acDate = `${utils.getShortMonthName(item.date)} ${utils.getDayOfMonthFromTimestampSeconds(item.date)}`
+          return {
+            date:  acDate || '',
+            description: getLocale('autoContribute'),
+            type: 'contributeTx' as TransactionType,
+            amount: {
+              value: amount,
+              converted: utils.convertBalance(amount, balance.rates)
+            }
+          }
+        case 3:  // grants
+          const grantDate = utils.getLongMonthName(item.date)
+          return {
+            date: grantDate || '',
+            description: getLocale('grantsStatement'),
+            type: 'grantsTx' as TransactionType,
+            amount: {
+              value: amount,
+              converted: utils.convertBalance(amount, balance.rates)
+            }
+          }
+        case 5:  // ads earnings
+          const adsDate = utils.getLongMonthName(item.date)
+          return {
+            date: adsDate || '',
+            description: getLocale('adsStatement'),
+            type: 'earningFromAdsTx' as TransactionType,
+            amount: {
+              value: amount,
+              converted: utils.convertBalance(amount, balance.rates)
+            }
+          }
+        case 8:  // tips
+          const tipsDate = `${utils.getShortMonthName(item.date)} ${utils.getDayOfMonthFromTimestampSeconds(item.date)}`
+          return {
+            date: tipsDate || '',
+            description: getLocale('oneTimeTip'),
+            type: 'donationTx' as TransactionType,
+            amount: {
+              value: amount,
+              converted: utils.convertBalance(amount, balance.rates)
+            }
+          }
+        case 16:  // monthly
+          const monthlyDate = `${utils.getShortMonthName(item.date)} ${utils.getDayOfMonthFromTimestampSeconds(item.date)}`
+          return {
+            date: monthlyDate || '',
+            description: getLocale('monthlyDonation'),
+            type: 'recurringDonationTx' as TransactionType,
+            amount: {
+              value: amount,
+              converted: utils.convertBalance(amount, balance.rates)
+            }
+          }
+        default: return {
+          date: utils.getShortMonthName(new Date().toString()),
+          description: getLocale('grantsStatement'),
+          type: 'grantsTx' as TransactionType,
+          amount: {
+            value: '0.0',
+            converted: '0.00'
+          }
+        }
+      }
+    })
+  }
+
+  selectPreviousMonthFromCurrent = () => {
+    const currentTime = new Date()
+    return `${currentTime.getFullYear()}_${currentTime.getMonth() + 1}`
+  }
+
+  getMonthlyStatementMonthsAvailable = () => {
+    const { monthlyStatement } = this.props.rewardsData
+    const monthsAvailable = monthlyStatement.monthsAvailable
+    if (!monthsAvailable) {
+      const currentTime = new Date()
+      const reportKey = `${currentTime.getFullYear()}_${currentTime.getMonth() + 1}`
+      return JSON.parse(`{ \"${reportKey}\" : \"${currentTime.toLocaleString(navigator.language, { month: 'long' })} ${currentTime.getFullYear()}\" }`)
+    }
+    let monthsJson = '{ '
+    for (let ix = 0; ix < monthsAvailable.length; ix++) {
+      const date = new Date(parseInt(monthsAvailable[ix].split('_')[0], 10), parseInt(monthsAvailable[ix].split('_')[1], 10) - 1)
+      const selectionStringValue = date.toLocaleString(navigator.language, { month: 'long' })
+      if (ix + 1 === monthsAvailable.length) {
+        monthsJson += `\"${monthsAvailable[ix]}\" : \"${selectionStringValue} ${date.getFullYear()}\"`
+      } else {
+        monthsJson += `\"${monthsAvailable[ix]}\" : \"${selectionStringValue} ${date.getFullYear()}\",`
+      }
+    }
+    monthsJson += ' }'
+    return JSON.parse(monthsJson)
+  }
+
+  getRows = (rows: Rewards.StatementItem[]): ContributeRows[] => {
+    const { balance } = this.props.rewardsData
+    return rows.map((item: Rewards.StatementItem) => {
+      let faviconUrl = `chrome://favicon/size/48@1x/${item.url}`
+      if (item.faviconUrl && item.verified) {
+        faviconUrl = `chrome://favicon/size/48@1x/${item.faviconUrl}`
+      }
+      let tipMonth = ''
+      let tipDayOfMonth = ''
+      if (item.category === 8) {
+        let tipDate = new Date(parseInt(item.date, 10) * 1000)
+        tipMonth = tipDate.toLocaleString(navigator.language, { month: 'short' })
+        tipDayOfMonth = tipDate.getDate().toString()
+      }
+
+      const amountValue = utils.convertProbiToFixed(item.probi)
+      return {
+        profile: {
+          name: item.name,
+          verified: item.verified,
+          provider: (item.provider ? item.provider : undefined) as Provider,
+          src: faviconUrl
+        },
+        url: item.url,
+        attention: parseInt(item.percentage, 10) || 0,
+        token: {
+          value: amountValue,
+          converted: amountValue !== '0.0' ? utils.convertBalance(amountValue, balance.rates) : '0.00'
+        },
+        tipDate: tipMonth !== '' && tipDayOfMonth !== '' && item.category === 8 ? tipMonth + ' ' + tipDayOfMonth : ''
+      }
+    })
+  }
+
+  getMonthlyStatementAutoContribute = (): ContributeRows[] => {
+    const { monthlyStatement } = this.props.rewardsData
+    const autoContribute = monthlyStatement.statementItems.filter((item: Rewards.StatementItem) => item.category === 2)
+    return this.getRows(autoContribute)
+  }
+
+  getMonthlyStatementMonthlyContributions = (): ContributeRows[] => {
+    const { monthlyStatement } = this.props.rewardsData
+    const monthlyDonation = monthlyStatement.statementItems.filter((item: Rewards.StatementItem) => item.category === 16)
+    return this.getRows(monthlyDonation)
+  }
+
+  getMonthlyStatementTips = (): ContributeRows[] => {
+    const { monthlyStatement } = this.props.rewardsData
+    const tips = monthlyStatement.statementItems.filter((item: Rewards.StatementItem) => item.category === 8)
+    return this.getRows(tips)
+  }
+
+  getReconcileDayOfMonth = () => {
+    const { monthlyStatement } = this.props.rewardsData
+    return monthlyStatement.reconcileStamp
+  }
+
+  onMonthChange = (key: string) => {
+    this.actions.getMonthlyStatements((parseInt(key.split('_')[1], 10)), parseInt(key.split('_')[0], 10))
+  }
+
+  getMonthlyStatementSummary = () => {
+    const { monthlyStatement, balance } = this.props.rewardsData
+
+    const grantValue = monthlyStatement.balanceReport.grant ? utils.convertProbiToFixed(monthlyStatement.balanceReport.grant) : '0.0'
+    const adsValue = monthlyStatement.balanceReport.ads ? utils.convertProbiToFixed(monthlyStatement.balanceReport.ads) : '0.0'
+    const contributeValue = monthlyStatement.balanceReport ? utils.convertProbiToFixed(monthlyStatement.balanceReport.contribute) : '0.0'
+    const donationValue = monthlyStatement.balanceReport ? utils.convertProbiToFixed(monthlyStatement.balanceReport.donation) : '0.0'
+    const tipsValue = monthlyStatement.balanceReport ? utils.convertProbiToFixed(monthlyStatement.balanceReport.tips) : '0.0'
+
+    return [
+      {
+        text: getLocale('tokenGrantsReceived'),
+        type: 'grant' as any,
+        token: {
+          value: grantValue,
+          converted: grantValue !== '0.0' ? utils.convertBalance(grantValue, balance.rates) : '0.00'
+        }
+      },
+      {
+        text: getLocale('earningsFromAds'),
+        type: 'ads' as any,
+        token: {
+          value: adsValue,
+          converted: adsValue !== '0.0' ? utils.convertBalance(adsValue, balance.rates) : '0.00'
+        }
+      },
+      {
+        text: getLocale('autoContribute'),
+        type: 'contribute' as any,
+        token: {
+          value: contributeValue,
+          converted: contributeValue !== '0.0' ? utils.convertBalance(contributeValue, balance.rates) : '0.00',
+          isNegative: contributeValue !== '0.0'
+        }
+      },
+      {
+        text: getLocale('monthlyContributions'),
+        type: 'recurring' as any,
+        token: {
+          value: donationValue,
+          converted: donationValue !== '0.0' ? utils.convertBalance(donationValue, balance.rates) : '0.00',
+          isNegative: donationValue !== '0.0'
+        }
+      },
+      {
+        text: getLocale('oneTimeTips'),
+        type: 'donations' as any,
+        token: {
+          value: tipsValue,
+          converted: tipsValue !== '0.0' ? utils.convertBalance(tipsValue, balance.rates) : '0.00',
+          isNegative: tipsValue !== '0.0'
+        }
+      }
+    ]
+  }
+
+  getMonthlyStatementTotal = () => {
+    const { monthlyStatement, balance } = this.props.rewardsData
+    return {
+      value: utils.convertProbiToFixed(monthlyStatement.balanceReport.total),
+      converted: utils.convertBalance(utils.convertProbiToFixed(monthlyStatement.balanceReport.total), balance.rates)
+    }
+  }
+
+  getMonthlyStatementOpenBalance = () => {
+    return {
+      value: '10.0',
+      converted: '5.20'
+    }
+  }
+
+  getMonthlyStatementCloseBalance = () => {
+    return {
+      value: '11.0',
+      converted: '5.30'
+    }
+  }
+
+  getPaymentDay = () => {
+    return utils.getDayOfMonthFromTimestampSeconds(this.getReconcileDayOfMonth())
+  }
+
+  onPrintActivity = () => {
+    if (window.location) {
+      window.open(window.location.href + '?monthly_print=true')
+    }
+  }
+
+  onDownloadPDF = () => {
+    if (window.location) {
+      window.open(window.location.href + '?monthly_pdf=true')
+    }
+  }
+
   render () {
     const {
       connectedWallet,
@@ -354,47 +616,72 @@ class PageWallet extends React.Component<Props, State> {
       addresses,
       balance,
       ui,
-      pendingContributionTotal
+      pendingContributionTotal,
+      hasMonthlyStatement
     } = this.props.rewardsData
+    console.log(hasMonthlyStatement)
     const { total } = balance
-    const { walletRecoverySuccess, emptyWallet, modalBackup } = ui
+    const { walletRecoverySuccess, modalBackup } = ui
     const addressArray = utils.getAddresses(addresses)
 
     const pendingTotal = parseFloat((pendingContributionTotal || 0).toFixed(1))
 
     return (
       <>
-        <WalletWrapper
-          balance={total.toFixed(1)}
-          converted={utils.formatConverted(this.getConversion())}
-          actions={[
-            {
-              name: getLocale('panelAddFunds'),
-              action: this.onModalAddFundsToggle,
-              icon: <WalletAddIcon />,
-              testId: 'panel-add-funds'
-            }
-          ]}
-          onSettingsClick={this.onModalBackupOpen}
-          onActivityClick={this.onModalActivityToggle}
-          showCopy={true}
-          showSecActions={true}
-          grants={this.getGrants()}
-          connectedWallet={connectedWallet}
-          alert={this.walletAlerts()}
-        >
-          {
-            enabledMain
-            ? emptyWallet
-              ? <WalletEmpty />
-              : <WalletSummary
-                reservedAmount={pendingTotal}
-                reservedMoreLink={'https://brave.com/faq/#unclaimed-funds'}
-                {...this.getWalletSummary()}
-              />
-            : <WalletOff/>
-          }
-        </WalletWrapper>
+        {
+          this.props.isPrint ?
+            <PrintableActivity
+              contributeRows={this.getMonthlyStatementAutoContribute()}
+              recurringRows={this.getMonthlyStatementMonthlyContributions()}
+              tipRows={this.getMonthlyStatementTips()}
+              transactionRows={this.getMonthlyStatementTransaction()}
+              months={this.getMonthlyStatementMonthsAvailable()}
+              currentMonth={this.selectPreviousMonthFromCurrent()}
+              summary={this.getMonthlyStatementSummary()}
+              total={this.getMonthlyStatementTotal()}
+              paymentDay={this.getPaymentDay()}
+              openBalance={{
+                value: '10.0',
+                converted: '5.20'
+              }}
+              closingBalance={{
+                value: '11.0',
+                converted: '5.30'
+              }}
+            />
+            :
+            <WalletWrapper
+              balance={total.toFixed(1)}
+              converted={utils.formatConverted(this.getConversion())}
+              actions={[
+                {
+                  name: getLocale('panelAddFunds'),
+                  action: this.onModalAddFundsToggle,
+                  icon: <WalletAddIcon />,
+                  testId: 'panel-add-funds'
+                }
+              ]}
+              onSettingsClick={this.onModalBackupOpen}
+              onActivityClick={this.onModalActivityToggle}
+              showCopy={true}
+              showSecActions={true}
+              grants={this.getGrants()}
+              connectedWallet={connectedWallet}
+              alert={this.walletAlerts()}
+            >
+              {
+                enabledMain ?
+                  <WalletSummary
+                    reservedAmount={pendingTotal}
+                    reservedMoreLink={'https://brave.com/faq/#unclaimed-funds'}
+                    hasActivity={true}
+                    onActivity={this.onModalActivityToggle}
+                    {...this.getWalletSummary()}
+                  />
+                : <WalletOff />
+              }
+            </WalletWrapper>
+        }
         {
           modalBackup
             ? <ModalBackupRestore
@@ -428,101 +715,21 @@ class PageWallet extends React.Component<Props, State> {
             : null
         }
         {
-          // TODO NZ add actual data for the whole section
-          this.state.modalActivity
-            ? <ModalActivity
-              contributeRows={[
-                {
-                  profile: {
-                    name: 'Bart Baker',
-                    verified: true,
-                    provider: 'youtube',
-                    src: ''
-                  },
-                  url: 'https://brave.com',
-                  attention: 40,
-                  onRemove: this.onModalActivityRemove,
-                  token: {
-                    value: '5.0',
-                    converted: '5.00'
-                  }
-                }
-              ]}
-              transactionRows={[
-                {
-                  date: '6/1',
-                  type: 'deposit',
-                  description: 'Brave Ads payment for May',
-                  amount: {
-                    value: '5.0',
-                    converted: '5.00'
-                  }
-                }
-              ]}
+          this.state.modalActivity ?
+            <ModalActivity
+              contributeRows={this.getMonthlyStatementAutoContribute()}
+              recurringRows={this.getMonthlyStatementMonthlyContributions()}
+              tipRows={this.getMonthlyStatementTips()}
+              transactionRows={this.getMonthlyStatementTransaction()}
               onClose={this.onModalActivityToggle}
-              onPrint={this.onModalActivityAction.bind('onPrint')}
-              onDownloadPDF={this.onModalActivityAction.bind('onDownloadPDF')}
-              onMonthChange={this.onModalActivityAction.bind('onMonthChange')}
-              months={{
-                'aug-2018': 'August 2018',
-                'jul-2018': 'July 2018',
-                'jun-2018': 'June 2018',
-                'may-2018': 'May 2018',
-                'apr-2018': 'April 2018'
-              }}
-              currentMonth={'aug-2018'}
-              summary={[
-                {
-                  text: 'Token Grant available',
-                  type: 'grant',
-                  token: {
-                    value: '10.0',
-                    converted: '5.20'
-                  }
-                },
-                {
-                  text: 'Earnings from Brave Ads',
-                  type: 'ads',
-                  token: {
-                    value: '10.0',
-                    converted: '5.20'
-                  }
-                },
-                {
-                  text: 'Brave Contribute',
-                  type: 'contribute',
-                  notPaid: true,
-                  token: {
-                    value: '10.0',
-                    converted: '5.20',
-                    isNegative: true
-                  }
-                },
-                {
-                  text: 'Recurring Tips',
-                  type: 'recurring',
-                  notPaid: true,
-                  token: {
-                    value: '2.0',
-                    converted: '1.1',
-                    isNegative: true
-                  }
-                },
-                {
-                  text: 'One-timen Tips',
-                  type: 'donations',
-                  token: {
-                    value: '19.0',
-                    converted: '10.10',
-                    isNegative: true
-                  }
-                }
-              ]}
-              total={{
-                value: '1.0',
-                converted: '0.5'
-              }}
-              paymentDay={12}
+              onPrint={this.onPrintActivity}
+              onDownloadPDF={this.onDownloadPDF}
+              onMonthChange={this.onMonthChange}
+              months={this.getMonthlyStatementMonthsAvailable()}
+              currentMonth={this.selectPreviousMonthFromCurrent()}
+              summary={this.getMonthlyStatementSummary()}
+              total={this.getMonthlyStatementTotal()}
+              paymentDay={this.getPaymentDay()}
               openBalance={{
                 value: '10.0',
                 converted: '5.20'
@@ -533,7 +740,7 @@ class PageWallet extends React.Component<Props, State> {
               }}
             />
             : null
-        }
+          }
       </>
     )
   }

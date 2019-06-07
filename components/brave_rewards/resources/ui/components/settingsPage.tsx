@@ -41,6 +41,9 @@ class SettingsPage extends React.Component<Props, {}> {
     this.actions.getTransactionHistory()
     this.actions.getAdsData()
     this.actions.getExcludedSites()
+
+    const currentTime = new Date()
+    this.actions.getMonthlyStatements((currentTime.getMonth() + 1), currentTime.getFullYear())
   }
 
   componentDidMount () {
@@ -168,7 +171,7 @@ class SettingsPage extends React.Component<Props, {}> {
               ? this.getGrantClaims()
               : null
             }
-            <PageWallet />
+            <PageWallet isPrint={false} />
           </Column>
         </Grid>
       </Page>

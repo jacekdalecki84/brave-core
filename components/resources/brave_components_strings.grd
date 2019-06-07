@@ -273,6 +273,20 @@
         I just tipped <ph name="NAME">$1<ex>user</ex></ph> using the Brave Browser. Check it out at https://brave.com/tips.
       </message>
       <message name="IDS_BRAVE_REWARDS_LOCAL_COMPLIMENT_TWEET_HASHTAG" desc="">TipWithBrave</message>
+      <message name="IDS_BRAVE_REWARDS_TOKEN_GRANTS_RECEIVED" desc="">Token grants received</message>
+      <message name="IDS_BRAVE_REWARDS_EARNINGS_FROM_ADS" desc="">Rewards from ads</message>
+      <message name="IDS_BRAVE_REWARDS_EARNINGS_FROM_ADS_TX" desc="">Ads Earnings</message>
+      <message name="IDS_BRAVE_REWARDS_AUTO_CONTRIBUTE" desc="">Auto-Contribute</message>
+      <message name="IDS_BRAVE_REWARDS_MONTHLY_CONTRIBUTION" desc="">Monthly contribution</message>
+      <message name="IDS_BRAVE_REWARDS_MONTHLY_CONTRIBUTIONS" desc="">Monthly contributions</message>
+      <message name="IDS_BRAVE_REWARDS_MONTHLY_DONATION" desc="">Monthly contribution</message>
+      <message name="IDS_BRAVE_REWARDS_NO_STATEMENT_AUTO_CONTRIBUTIONS" desc="">No Auto-Contributions for this period</message>
+      <message name="IDS_BRAVE_REWARDS_NO_STATEMENT_MONTHLY_CONTRIBUTIONS" desc="">No monthly contributions for this period</message>
+      <message name="IDS_BRAVE_REWARDS_NO_STATEMENT_TIPS" desc="">No tips for this period</message>
+      <message name="IDS_BRAVE_REWARDS_NO_STATEMENT_TRANSACTIONS">No transactions for this period</message>
+      <message name="IDS_BRAVE_REWARDS_ONE_TIME_TIP" desc="">One-time contribution</message>
+      <message name="IDS_BRAVE_REWARDS_ONE_TIME_TIPS" desc="">One-time tips</message>
+      <message name="IDS_BRAVE_REWARDS_DONATION_TX" desc="">One-time Tip</message>
 
       <!-- WebUI rewards internals resources -->
       <message name="IDS_BRAVE_REWARDS_INTERNALS_AMOUNT" desc="Amount">Amount:</message>
@@ -304,7 +318,7 @@
       <!-- WebUI brave ui resources -->
       <message name="IDS_BRAVE_UI_ABOUT" desc="">about</message>
       <message name="IDS_BRAVE_UI_ACCEPT" desc="">Accept</message>
-      <message name="IDS_BRAVE_UI_ACTIVITY_COPY" desc="">©2016–2018 Brave Software. Brave is a registered trademark of Brave Software. Site names may be trademarks or registered trademarks of the site owner.</message>
+      <message name="IDS_BRAVE_UI_ACTIVITY_COPY" desc="">©2016–2019 Brave Software. Brave is a registered trademark of Brave Software. Site names may be trademarks or registered trademarks of the site owner.</message>
       <message name="IDS_BRAVE_UI_ACTIVITY_NOTE" desc="">To protect your privacy, this Brave Rewards statement is not saved, recorded or logged anywhere other than on your device (this computer). It cannot be retrieved from Brave in the event of data loss on your device.</message>
       <message name="IDS_BRAVE_UI_ADD_FUNDS" desc="">add funds</message>
       <message name="IDS_BRAVE_UI_AUTO_TIP_TEXT" desc="">You are automatically sending a tip to:</message>
@@ -323,6 +337,7 @@
       <message name="IDS_BRAVE_UI_BRAVE_ADS_TITLE" desc="">Ads</message>
       <message name="IDS_BRAVE_UI_BRAVE_CONTRIBUTE_DESC" desc="">Support your favorite sites just by browsing – or tip a site any time you like.</message>
       <message name="IDS_BRAVE_UI_BRAVE_CONTRIBUTE_TITLE" desc="">Auto-Contribute</message>
+      <message name="IDS_BRAVE_REWARDS_CONTRIBUTE_TX" desc="">Auto-Contribution</message>
       <message name="IDS_BRAVE_UI_BRAVE_REWARDS" desc="">Brave Rewards</message>
       <message name="IDS_BRAVE_UI_AND" desc="">and</message>
       <message name="IDS_BRAVE_UI_PRIVACY_POLICY" desc="">Privacy Policy</message>
@@ -345,7 +360,9 @@
       <message name="IDS_BRAVE_UI_CLAIM" desc="">Claim</message>
       <message name="IDS_BRAVE_UI_CLOSE_BALANCE" desc="">Closing Balance</message>
       <message name="IDS_BRAVE_UI_CONTRIBUTE" desc="">Contribute</message>
-      <message name="IDS_BRAVE_UI_CONTRIBUTE_ALLOCATION" desc="">Auto-Contribute Allocation</message>
+      <message name="IDS_BRAVE_UI_CONTRIBUTE_ALLOCATION" desc="">Auto-Contribute Detail</message>
+      <message name="IDS_BRAVE_UI_DONATION_ALLOCATION" desc="">Monthly Contribution Detail</message>
+      <message name="IDS_BRAVE_UI_TIP_ALLOCATION" desc="">Tips</message>
       <message name="IDS_BRAVE_UI_COPY" desc="">Copy</message>
       <message name="IDS_BRAVE_UI_CURRENT_DONATION" desc="">You’re currently sending {{currentDonation}} BAT to this site every month.</message>
       <message name="IDS_BRAVE_UI_DATE" desc="">Date</message>
@@ -407,16 +424,19 @@
       <message name="IDS_BRAVE_UI_ONE_TIME" desc="">One time</message>
       <message name="IDS_BRAVE_UI_ONE_TIME_DONATION" desc="">One-time Tips</message>
       <message name="IDS_BRAVE_UI_OPEN_BALANCE" desc="">Opening Balance</message>
-      <message name="IDS_BRAVE_UI_PAYMENT" desc="">Payment</message>
-      <message name="IDS_BRAVE_UI_PAYMENT_MONTHLY" desc="">Payment made every {{day}}th day in each month.</message>
+      <message name="IDS_BRAVE_UI_PAYMENT" desc="">Amount</message>
+      <message name="IDS_BRAVE_UI_PAYMENT_MONTHLY" desc="">Payment made on day {{day}} of each month.</message>
       <message name="IDS_BRAVE_UI_PAYMENT_NOT_MADE" desc="">Payment not made.</message>
-      <message name="IDS_BRAVE_UI_PAYMENT_WARNING" desc="">When your balance is not enough to cover the combined total of Auto-Contribute and your recurring tips, these payments are skipped for this period.</message>
+      <message name="IDS_BRAVE_UI_PAYMENT_WARNING" desc="">When your remaining balance can not cover the combined total of Auto-Contribute and monthly contributions, they will be skipped for this period.</message>
       <message name="IDS_BRAVE_UI_PAYMENT_PINNED_SITES_HEADER" desc="">Pinned sites are now</message>
       <message name="IDS_BRAVE_UI_PAYMENT_PINNED_SITES_MSG" desc="">Here's how monthly tips work:</message>
       <message name="IDS_BRAVE_UI_PAYMENT_PINNED_SITES_ONE" desc="">Monthly tips do not come out of your Auto-Contribute payment. They're separate.</message>
       <message name="IDS_BRAVE_UI_PAYMENT_PINNED_SITES_TWO" desc="">Each site is paid a fixed amount monthly.</message>
       <message name="IDS_BRAVE_UI_PAYMENT_PINNED_SITES_THREE" desc="">Monthly tips are paid out all at once, each month. If you're using Auto-Contribute, tips go out at the same time as your monthly Auto-Contribute payment.</message>
       <message name="IDS_BRAVE_UI_PAYMENT_PINNED_SITES_FOUR" desc="">You can remove any site receiving monthly tips from inside of the Tips panel.</message>
+      <message name="IDS_BRAVE_REWARDS_CONTRIBUTE_VISITED" desc="">Site</message>
+      <message name="IDS_BRAVE_REWARDS_TIPS_VISITED" desc="">Content Creator</message>
+      <message name="IDS_BRAVE_REWARDS_TIPS_DATE" desc="">Date</message>
       <message name="IDS_BRAVE_UI_PLEASE_NOTE" desc="">Please note:</message>
       <message name="IDS_BRAVE_UI_PRINT" desc="">Print</message>
       <message name="IDS_BRAVE_UI_READY_TO_TAKE_PART" desc="">Ready to get started?</message>
@@ -424,6 +444,7 @@
       <message name="IDS_BRAVE_UI_READY_TO_TAKE_PART_START" desc="">You can start with the</message>
       <message name="IDS_BRAVE_UI_RECOVERY_KEYS" desc="">Recovery Key</message>
       <message name="IDS_BRAVE_UI_RECURRING" desc="">Recurring</message>
+      <message name="IDS_BRAVE_UI_RECURRING_DONATION_TX" desc="">Monthly Tips</message>
       <message name="IDS_BRAVE_UI_RECURRING_DONATION" desc="">Monthly Tips</message>
       <message name="IDS_BRAVE_UI_RECURRING_DONATIONS" desc="">Monthly Tips</message>
       <message name="IDS_BRAVE_UI_REDDIT_TIP_TITLE" desc="">Tip {{ user }} for their post:</message>
@@ -476,13 +497,14 @@
       <message name="IDS_BRAVE_UI_THANK_YOU" desc="">Thank you</message>
       <message name="IDS_BRAVE_UI_TIP_TEXT" desc="">You've just sent a tip to:</message>
       <message name="IDS_BRAVE_UI_TIP_ON_LIKE" desc="">Tip on like</message>
+      <message name="IDS_BRAVE_UI_TIPS" desc="">One-Time Tips</message>
       <message name="IDS_BRAVE_UI_TITLE_BAT" desc="">Basic Attention Token (BAT)</message>
       <message name="IDS_BRAVE_UI_TITLE_BTC" desc="">Bitcoin (BTC)</message>
       <message name="IDS_BRAVE_UI_TITLE_ETH" desc="">Ethereum (ETH)</message>
       <message name="IDS_BRAVE_UI_TITLE_LTC" desc="">Litecoin (LTC)</message>
       <message name="IDS_BRAVE_UI_TOKEN_GRANT_CLAIMED" desc="">Token Grants Claimed</message>
       <message name="IDS_BRAVE_UI_TOKENS" desc="">tokens</message>
-      <message name="IDS_BRAVE_UI_TOTAL" desc="">Total</message>
+      <message name="IDS_BRAVE_UI_TOTAL" desc="">Change since last month</message>
       <message name="IDS_BRAVE_UI_TRANSACTIONS" desc="">Transactions</message>
       <message name="IDS_BRAVE_UI_TURN_ON_ADS" desc="">Turn on Ads</message>
       <message name="IDS_BRAVE_UI_TURN_ON_REWARDS_DESC" desc="">This enables both ads and automatic contributions. You can turn them on or off separately at any time.</message>
@@ -518,6 +540,7 @@
       <message name="IDS_BRAVE_UI_SITE_BANNER_NOTICE_TEXT" desc="">This creator has not yet signed up to receive contributions from Brave users. Your browser will keep trying to contribute until they verify, or until 90 days have passed.</message>
       <message name="IDS_BRAVE_UI_SITE_UNVERIFIED_TEXT_MORE" desc="">Learn more.</message>
       <message name="IDS_BRAVE_UI_ADS_EARNINGS" desc="Description text for ad grants in grant details">earned from ads</message>
+      <message name="IDS_BRAVE_UI_ADS_EARNINGS_STATEMENT" desc="">Rewards from ads</message>
       <message name="IDS_BRAVE_UI_PENDING_CONTRIBUTIONS" desc="Title of pending contribution modal">Pending contributions</message>
       <message name="IDS_BRAVE_UI_PENDING_TYPE_RECURRING" desc="Name of recurring tip type">Recurring tip</message>
       <message name="IDS_BRAVE_UI_PENDING_TYPE_TIP" desc="Name of one-time tip type">One-time tip</message>
@@ -540,6 +563,8 @@
       <message name="IDS_BRAVE_UI_GRANT_FINISH_TITLE_UGP" desc="Title on final grant screen for UGP">It’s your lucky day!</message>
       <message name="IDS_BRAVE_UI_GRANT_FINISH_TEXT_UGP" desc="Text on final grant screen for UGP">Your token grant is on its way.</message>
       <message name="IDS_BRAVE_UI_GRANT_FINISH_TOKEN_UGP" desc="Token text on final grant screen for UGP">Free Token Grant</message>
+      <message name="IDS_BRAVE_UI_GRANTS_STATEMENT" desc="">Token grant received</message>
+      <message name="IDS_BRAVE_UI_GRANTS_TX" desc="">Grant</message>
 
       <!-- WebUI brave sync resources -->
       <!-- WebUI brave sync resources: Shared Content -->

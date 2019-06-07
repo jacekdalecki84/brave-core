@@ -59,5 +59,6 @@
 - (std::string)URIEncode:(const std::string &)value;
 - (std::unique_ptr<ledger::LogStream>)verboseLog:(const char *)file line:(int)line vlogLevel:(int)vlog_level;
 - (void)onContributeUnverifiedPublishers:(ledger::Result)result publisherKey:(const std::string&)publisher_key publisherName:(const std::string&)publisher_name;
+- (void)getAllTransactions:(const base::flat_map<std::string, std::string>&)publisher_ac_txs month:(int32_t)month year:(uint32_t)year  callback:(ledger::TransactionListCallback)callback;
 
 @end

@@ -164,3 +164,6 @@ std::unique_ptr<ledger::LogStream> NativeLedgerClient::VerboseLog(const char * f
 void NativeLedgerClient::OnContributeUnverifiedPublishers(ledger::Result result, const std::string& publisher_key, const std::string& publisher_name) {
   return [bridge_ onContributeUnverifiedPublishers:result publisherKey:publisher_key publisherName:publisher_name];
 }
+void NativeLedgerClient::GetAllTransactions(const base::flat_map<std::string, std::string>& publisher_ac_txs, int32_t month, uint32_t year, ledger::TransactionListCallback callback) {
+  [bridge_ getAllTransactions:publisher_ac_txs month:month year:year callback:callback];
+}

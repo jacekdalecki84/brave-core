@@ -66,4 +66,5 @@ private:
   std::string URIEncode(const std::string & value) override;
   std::unique_ptr<ledger::LogStream> VerboseLog(const char * file, int line, int vlog_level) const override;
   void OnContributeUnverifiedPublishers(ledger::Result result, const std::string& publisher_key, const std::string& publisher_name) override;
+  void GetAllTransactions(const base::flat_map<std::string, std::string>& publisher_ac_txs, int32_t month, uint32_t year, ledger::TransactionListCallback callback) override;
 };

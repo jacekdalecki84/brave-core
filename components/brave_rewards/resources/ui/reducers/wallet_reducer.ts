@@ -189,8 +189,15 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
       break
     }
     case types.ON_BALANCE_REPORTS: {
+      let hasMonthlyStatement = false
+      const currentTime = new Date()
+      if (Object.keys(action.payload.reports).length > 0 &&
+          Object.keys(action.payload.reports)[0] !== currentTime.getFullYear() + '_' + (currentTime.getMonth() + 1)) {
+        hasMonthlyStatement = true
+      }
       state = { ...state }
       state.reports = action.payload.reports
+      state.hasMonthlyStatement = hasMonthlyStatement
       break
     }
     case types.CHECK_WALLET_EXISTENCE: {
@@ -287,6 +294,17 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
         ui
       }
       break
+    }
+    case types.GET_MONTHLY_STATEMENTS: {
+      chrome.send('brave_rewards.getMonthlyStatements', [
+        action.payload.month,
+        action.payload.year
+      ])
+      break
+    }
+    case types.ON_GET_MONTHLY_STATEMENTS: {
+      state = { ...state }
+      state.monthlyStatement = action.payload.monthlyStatement
     }
   }
 

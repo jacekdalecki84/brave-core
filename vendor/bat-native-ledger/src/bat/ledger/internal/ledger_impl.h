@@ -489,6 +489,11 @@ class LedgerImpl : public ledger::Ledger,
 
   void FetchBalance(ledger::FetchBalanceCallback callback) override;
 
+  void GetAllTransactions(
+      const ledger::MonthlyStatementCallback& callback,
+      ledger::ACTIVITY_MONTH month,
+      uint32_t year) override;
+
  private:
   void OnLoad(ledger::VisitDataPtr visit_data,
               const uint64_t& current_time) override;
@@ -576,6 +581,27 @@ class LedgerImpl : public ledger::Ledger,
       const std::vector<int32_t>& country_codes,
       int32_t current_country_code,
       ledger::GetAddressesCallback callback);
+
+  void OnGetAllTransactions(
+      ledger::mojom::AllTransactionsPtr transactions,
+      uint32_t record,
+      ledger::ACTIVITY_MONTH month,
+      uint32_t year,
+      double current_balance,
+      ledger::MonthlyStatementCallback callback);
+
+  void OnReportBalanceFetched(
+      ledger::Result result,
+      ledger::BalancePtr balance,
+      ledger::ACTIVITY_MONTH month,
+      uint32_t year,
+      const ledger::MonthlyStatementCallback& callback);
+
+  ledger::mojom::MonthlyStatementsPtr ToMojoMonthlyStatements(
+      ledger::mojom::AllTransactionsPtr list,
+      ledger::BalanceReportPtr balance_report,
+      const std::vector<std::string>& months_available,
+      uint64_t reconcile_stamp);
 
   ledger::LedgerClient* ledger_client_;
   std::unique_ptr<braveledger_grant::Grants> bat_grants_;

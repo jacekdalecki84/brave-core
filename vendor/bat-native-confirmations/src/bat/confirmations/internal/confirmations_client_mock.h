@@ -267,6 +267,12 @@ class MockConfirmationsClient : public ConfirmationsClient {
       ledger::Result result,
       const std::string& publisher_key,
       const std::string& publisher_name));
+
+  MOCK_METHOD4(GetAllTransactions, void(
+      const base::flat_map<std::string, std::string>& publisher_ac_txs,
+      int32_t month,
+      uint32_t year,
+      ledger::TransactionListCallback callback));
 };
 
 }  // namespace confirmations

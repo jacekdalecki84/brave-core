@@ -133,3 +133,15 @@ export const constructBackupString = (backupKey: string) => {
     'Save this key in a safe place, separate from your Brave browser. ' +
     'Make sure you keep this key private, or else your wallet will be compromised.'
 }
+
+export const getDayOfMonthFromTimestampSeconds = (timestamp: string) => {
+  return new Date(parseInt(timestamp, 10) * 1000).getDate().toString()
+}
+
+export const getShortMonthName = (timestamp: string) => {
+  return new Date(parseInt(timestamp, 10) * 1000).toLocaleString(navigator.language, { month: 'short' })
+}
+
+export const getLongMonthName = (timestamp: string) => {
+  return new Date(parseInt(timestamp, 10) * 1000).toLocaleString(navigator.language, { month: 'long' })
+}

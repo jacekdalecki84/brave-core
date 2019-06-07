@@ -535,6 +535,8 @@ std::string buildURL(const std::string& path,
 
 std::vector<std::string> split(const std::string& s, char delim);
 
+std::string ToProbi(const std::string& s, uint32_t offset = 0);
+
 bool ignore_for_testing();
 
 void set_ignore_for_testing(bool ignore);

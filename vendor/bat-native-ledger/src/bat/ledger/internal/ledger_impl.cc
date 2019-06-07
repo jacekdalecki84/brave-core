@@ -13,11 +13,15 @@
 #include <utility>
 #include <vector>
 
+#include "base/strings/stringprintf.h"
+#include "base/strings/string_number_conversions.h"
 #include "base/task/post_task.h"
 #include "base/task/thread_pool/thread_pool.h"
+#include "base/time/time.h"
 #include "bat/ads/issuers_info.h"
 #include "bat/ads/notification_info.h"
 #include "bat/confirmations/confirmations.h"
+#include "bat/ledger/internal/bignum.h"
 #include "bat/ledger/internal/media/media.h"
 #include "bat/ledger/internal/bat_helper.h"
 #include "bat/ledger/internal/bat_publishers.h"
@@ -27,6 +31,7 @@
 #include "bat/ledger/internal/media/helper.h"
 #include "bat/ledger/internal/rapidjson_bat_helper.h"
 #include "bat/ledger/internal/static_values.h"
+#include "mojo/public/cpp/bindings/map.h"
 #include "net/http/http_status_code.h"
 
 using namespace braveledger_grant; //  NOLINT
@@ -1642,6 +1647,163 @@ bool LedgerImpl::WasPublisherAlreadyProcessed(
 
 void LedgerImpl::FetchBalance(ledger::FetchBalanceCallback callback) {
   bat_wallet_->FetchBalance(callback);
+}
+
+void LedgerImpl::OnGetAllTransactions(
+    ledger::mojom::AllTransactionsPtr transaction_list,
+    uint32_t record,
+    ledger::ACTIVITY_MONTH month,
+    uint32_t year,
+    double current_balance,
+    ledger::MonthlyStatementCallback callback) {
+  for (uint32_t ix = 0; ix < transaction_list->publishers.size(); ix++) {
+    transaction_list->publishers[ix]->verified =
+        bat_publishers_->isVerified(transaction_list->publishers[ix]->id);
+  }
+
+  ledger::BalanceReportPtr report = ledger::BalanceReport::New();
+  ledger::BalanceReportInfo report_info;
+  if (bat_publishers_->getBalanceReport(month, year, &report_info)) {
+    report->grants = report_info.grants_;
+    report->earning_from_ads = report_info.earning_from_ads_;
+    report->auto_contribute = report_info.auto_contribute_;
+    report->recurring_donation = report_info.recurring_donation_;
+    report->one_time_donation = report_info.one_time_donation_;
+    report->opening_balance = report_info.opening_balance_;
+    report->closing_balance = report_info.closing_balance_;
+    report->deposits = report_info.deposits_;
+    report->total = report_info.total_;
+    bat_publishers_->setBalanceReport(
+        month,
+        year,
+        report_info);
+    if (report->grants != "0") {
+      ledger::mojom::TransactionStatementInfoPtr transaction =
+          ledger::mojom::TransactionStatementInfo::New();
+      transaction->probi = report->grants;
+      transaction->category = 3;  // placeholder for grants on statement
+      base::Time parsed_time;
+      std::string time_str =
+          base::StringPrintf("%s/1/%s",
+            std::to_string(month).c_str(),
+            std::to_string(year).c_str());
+      if (base::Time::FromString(
+          time_str.c_str(), &parsed_time)) {
+        transaction->date = parsed_time.ToDeltaSinceWindowsEpoch().InSeconds();
+        transaction_list->transactions.push_back(std::move(transaction));
+      }
+    }
+    if (report->earning_from_ads != "0") {
+      ledger::mojom::TransactionStatementInfoPtr transaction =
+          ledger::mojom::TransactionStatementInfo::New();
+      transaction->probi = report->earning_from_ads;
+      transaction->category = 5;  // placeholder for ads earnings on statement
+      base::Time parsed_time;
+      std::string time_str =
+          base::StringPrintf("%s/1/%s",
+            std::to_string(month).c_str(),
+            std::to_string(year).c_str());
+      if (base::Time::FromString(
+          time_str.c_str(), &parsed_time)) {
+        transaction->date = parsed_time.ToDeltaSinceWindowsEpoch().InSeconds();
+        transaction_list->transactions.push_back(std::move(transaction));
+      }
+    }
+  }
+  std::map<std::string, ledger::BalanceReportInfo> balance_reports(
+      bat_publishers_->getAllBalanceReports());
+  std::vector<std::string> months_available;
+  for (const auto& month_report : balance_reports) {
+    months_available.emplace_back(month_report.first);
+  }
+
+  ledger::mojom::MonthlyStatementsPtr monthly_statements =
+      ToMojoMonthlyStatements(
+            std::move(transaction_list),
+            std::move(report),
+            months_available,
+            GetReconcileStamp());
+
+  callback(std::move(monthly_statements));
+}
+
+ledger::mojom::MonthlyStatementsPtr LedgerImpl::ToMojoMonthlyStatements(
+    ledger::mojom::AllTransactionsPtr list,
+    ledger::BalanceReportPtr balance_report,
+    const std::vector<std::string>& months_available,
+    uint64_t reconcile_stamp) {
+  ledger::mojom::MonthlyStatementsPtr monthly_statements =
+      ledger::mojom::MonthlyStatements::New();
+  monthly_statements->publishers = std::move(list->publishers);
+  monthly_statements->transactions = std::move(list->transactions);
+  monthly_statements->balance_report = std::move(balance_report);
+  monthly_statements->months_available = months_available;
+  monthly_statements->reconcile_stamp = reconcile_stamp;
+  return monthly_statements;
+}
+
+void LedgerImpl::GetAllTransactions(
+    const ledger::MonthlyStatementCallback& callback,
+    ledger::ACTIVITY_MONTH month,
+    uint32_t year) {
+  FetchBalance(std::bind(
+                &LedgerImpl::OnReportBalanceFetched,
+                this,
+                _1,
+                _2,
+                month,
+                year,
+                callback));
+}
+
+void LedgerImpl::OnReportBalanceFetched(
+    ledger::Result result,
+    ledger::BalancePtr balance,
+    ledger::ACTIVITY_MONTH month,
+    uint32_t year,
+    const ledger::MonthlyStatementCallback& callback) {
+  braveledger_bat_helper::Transactions txns = bat_state_->GetTransactions();
+  std::map<std::string, std::string> publisher_ac_txs;
+  for (const auto& tx : txns) {
+    if (tx.submissionStamp_ != "0") {
+      double submission_stamp;
+      base::StringToDouble(tx.submissionStamp_, &submission_stamp);
+      base::Time::Exploded exploded;
+      base::Time::FromJsTime(
+          submission_stamp).LocalExplode(&exploded);
+      if (exploded.month == month) {
+        for (size_t b_ix = 0; b_ix < tx.ballots_.size(); b_ix++) {
+          double product(
+              static_cast<double>(tx.ballots_[b_ix].offset_) /
+              static_cast<double>(tx.votes_));
+          double contribution_amount;
+          base::StringToDouble(
+              tx.contribution_fiat_amount_, &contribution_amount);
+          double portion = product * contribution_amount;
+          std::string converted_portion =
+              base::NumberToString(portion * 10);  // bring tenths for probi
+
+          std::string ac_single_amount =
+              braveledger_bat_helper::ToProbi(converted_portion, 1);
+          publisher_ac_txs.insert(
+              std::make_pair(tx.ballots_[b_ix].publisher_,
+              ac_single_amount));
+        }
+      }
+    }
+  }
+  ledger_client_->GetAllTransactions(
+      mojo::MapToFlatMap(publisher_ac_txs),
+      month,
+      year,
+      std::bind(&LedgerImpl::OnGetAllTransactions,
+                this,
+                _1,
+                _2,
+                month,
+                year,
+                balance->total,
+                callback));
 }
 
 }  // namespace bat_ledger

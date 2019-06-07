@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <stddef.h>  // NOLINT
 
 #include "base/compiler_specific.h"
@@ -91,6 +92,10 @@ class PublisherInfoDatabase {
 
   bool RemoveAllPendingContributions();
 
+  void GetAllTransactions(ledger::PublisherInfoList* list,
+                          int32_t month,
+                          uint32_t year);
+
   // Returns the current version of the publisher info database
   int GetCurrentVersion();
 
@@ -98,6 +103,17 @@ class PublisherInfoDatabase {
 
   bool DeleteActivityInfo(const std::string& publisher_key,
                           uint64_t reconcile_stamp);
+
+  bool GetAutoContributePublishersByKeys(
+      ledger::PublisherInfoList* list,
+      const base::flat_map<std::string, std::string>& keys,
+      const int32_t month,
+      const uint32_t year);
+
+  void GetTransactionTypes(
+      std::vector<ledger::mojom::TransactionStatementInfoPtr>* transactions,
+      int32_t month,
+      uint32_t year);
 
   // Vacuums the database. This will cause sqlite to defragment and collect
   // unused space in the file. It can be VERY SLOW.

@@ -683,4 +683,24 @@ void BatLedgerImpl::FetchBalance(
                 _2));
 }
 
+void BatLedgerImpl::OnGetAllTransactions(
+    CallbackHolder<GetAllTransactionsCallback>* holder,
+    ledger::mojom::MonthlyStatementsPtr monthly_statements) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(std::move(monthly_statements));
+  delete holder;
+}
+
+void BatLedgerImpl::GetAllTransactions(
+    int32_t month,
+    uint32_t year,
+    GetAllTransactionsCallback callback) {
+  auto* holder = new CallbackHolder<GetAllTransactionsCallback>(
+      AsWeakPtr(), std::move(callback));
+
+  ledger_->GetAllTransactions(std::bind(
+      BatLedgerImpl::OnGetAllTransactions, holder, _1),
+        ToLedgerPublisherMonth(month), year);
+}
+
 }  // namespace bat_ledger

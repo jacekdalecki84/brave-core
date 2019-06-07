@@ -1503,4 +1503,11 @@ BATLedgerBridge(BOOL,
   }
 }
 
+- (void)getAllTransactions:(const base::flat_map<std::string, std::string>&)publisher_ac_txs month:(int32_t)month year:(uint32_t)year callback:(ledger::TransactionListCallback)callback
+{
+  // Added: https://github.com/brave/brave-core/pull/2733
+  // Tracked: https://github.com/brave/brave-rewards-ios/issues/135
+  // TODO: Add transaction statement to DB along with new methods to BATBraveLedgerDatabase and tests
+}
+
 @end

@@ -8,24 +8,30 @@ import { connect } from 'react-redux'
 
 // Components
 import SettingsPage from './settingsPage'
+import PageWallet from './pageWallet'
 
 // Utils
 import * as rewardsActions from '../actions/rewards_actions'
-import { WelcomePage } from 'brave-ui/features/rewards'
+import {
+  WelcomePage
+} from 'brave-ui/features/rewards'
 
 interface Props extends Rewards.ComponentProps {
 }
 
 interface State {
   creating: boolean
+  isPrint: boolean
 }
 
 export class App extends React.Component<Props, State> {
   constructor (props: Props) {
     super(props)
     this.state = {
-      creating: false
+      creating: false,
+      isPrint: false
     }
+
   }
 
   componentDidMount () {
@@ -39,6 +45,18 @@ export class App extends React.Component<Props, State> {
 
       if (adsIsSupported) {
         this.props.actions.onAdsSettingSave('adsEnabledMigrated', adsEnabled)
+      }
+    }
+
+    let params = (new URL(window.location.href)).searchParams
+    if (params.has('monthly_print') && params.get('monthly_print') === 'true') {
+      this.setState({
+        isPrint: true
+      })
+      // remove toolbar for printing
+      const element = document.getElementsByTagName('cr-toolbar')[0]
+      if (element && element.parentNode) {
+        element.parentNode.removeChild(element)
       }
     }
   }
@@ -88,6 +106,11 @@ export class App extends React.Component<Props, State> {
     return (
       <div id='rewardsPage'>
         {
+          this.state.isPrint ?
+            <PageWallet
+              isPrint={this.state.isPrint}
+            />
+          :
           !walletCreated
           ? <WelcomePage
             onTOSClick={this.openTOS}
@@ -99,7 +122,7 @@ export class App extends React.Component<Props, State> {
           : null
         }
         {
-          walletCreated
+          walletCreated && !this.state.isPrint
           ? <SettingsPage />
           : null
         }

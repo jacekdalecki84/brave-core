@@ -147,6 +147,9 @@ interface BatLedger {
   GetPendingContributionsTotal() => (double amount);
 
   FetchBalance() => (int32 result, ledger.mojom.Balance balance);
+
+  GetAllTransactions(int32 month, uint32 year) =>
+      (ledger.mojom.MonthlyStatements? monthly_statements);
 };
 
 interface BatLedgerClient {
@@ -245,4 +248,10 @@ interface BatLedgerClient {
 
   OnContributeUnverifiedPublishers(int32 result, string publisher_key,
       string publisher_name);
+
+  GetAllTransactions(
+      map<string, string> publisher_ac_txs,
+      int32 month, uint32 year) => (
+      ledger.mojom.AllTransactions? transactions,
+      uint32 next_record);
 };

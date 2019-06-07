@@ -7,10 +7,16 @@
 #define BAT_LEDGER_BALANCE_REPORT_INFO_HANDLER_
 
 #include <string>
+#include <vector>
 
 #include "bat/ledger/export.h"
+#include "bat/ledger/public/interfaces/ledger.mojom.h"
 
 namespace ledger {
+
+using BalanceReport = mojom::BalanceReport;
+using BalanceReportPtr = mojom::BalanceReportPtr;
+using BalanceReportList = std::vector<BalanceReportPtr>;
 
 LEDGER_EXPORT enum ReportType {
   GRANT = 0,
@@ -21,6 +27,7 @@ LEDGER_EXPORT enum ReportType {
   TIP = 5
 };
 
+// TODO(jsadler): instances of this need to be converted to mojom instance
 LEDGER_EXPORT struct BalanceReportInfo {
   BalanceReportInfo();
   BalanceReportInfo(const BalanceReportInfo&);

@@ -348,6 +348,22 @@ class BraveRewardsBrowserTest :
     wait_for_insufficient_notification_loop_->Run();
   }
 
+  void WaitForMonthlyStatementToOpen() {
+    if (monthly_statement_opened_) {
+      return;
+    }
+    wait_for_monthly_statement_to_open_loop_.reset(new base::RunLoop);
+    wait_for_monthly_statement_to_open_loop_->Run();
+  }
+
+  void WaitForMonthlyAutoContributeReportTabToLoad() {
+    if (ac_tab_opened_) {
+      return;
+    }
+    wait_for_ac_tab_to_open_.reset(new base::RunLoop);
+    wait_for_ac_tab_to_open_->Run();
+  }
+
   void GetReconcileTime() {
     rewards_service()->GetReconcileTime(
         base::Bind(&BraveRewardsBrowserTest::OnGetReconcileTime,
@@ -1041,6 +1057,70 @@ class BraveRewardsBrowserTest :
             AsWeakPtr()));
   }
 
+  void OpenMonthlyStatements() {
+    content::EvalJsResult monthlyStatementClickResult = EvalJs(contents(),
+        "document.querySelector(\"[data-test-id='monthlyStatementButton']\")"
+        ".click();"
+        "new Promise((resolve) => {"
+        "var count = 10;"
+        "var interval = setInterval(function() {"
+        "  if (count == 0) {"
+        "    clearInterval(interval);"
+        "    resolve(false);"
+        "  } else {"
+        "    count -= 1;"
+        "  }"
+        "  if (document.getElementById('modal')) {"
+        "    clearInterval(interval);"
+        "    resolve(document.getElementById('modal') != null);"
+        "  }"
+        "}, 500);});",
+        content::EXECUTE_SCRIPT_DEFAULT_OPTIONS,
+        content::ISOLATED_WORLD_ID_CONTENT_END);
+    ASSERT_TRUE(monthlyStatementClickResult.ExtractBool());
+    monthly_statement_opened_ = true;
+    if (wait_for_monthly_statement_to_open_loop_) {
+      wait_for_monthly_statement_to_open_loop_->Quit();
+    }
+  }
+
+  void OpenMonthlyAutoContributeReportTab() {
+    content::EvalJsResult acTabClickResult = EvalJs(contents(),
+        "document.querySelector(\"[data-test-id='cont3']\")"
+        ".click();"
+        "new Promise((resolve) => {"
+        "var count = 10;"
+        "var interval = setInterval(function() {"
+        "  if (count == 0) {"
+        "    clearInterval(interval);"
+        "    resolve(false);"
+        "  } else {"
+        "    count -= 1;"
+        "  }"
+        "  if (document.querySelector(\"[data-test-id='acTable']\")) {"
+        "    clearInterval(interval);"
+        "    resolve(document.querySelector(\"[data-test-id='acTable']\")"
+        "         != null);"
+        "  }"
+        "}, 500);});",
+        content::EXECUTE_SCRIPT_DEFAULT_OPTIONS,
+        content::ISOLATED_WORLD_ID_CONTENT_END);
+    ASSERT_TRUE(acTabClickResult.ExtractBool());
+    ac_tab_opened_ = true;
+    if (wait_for_ac_tab_to_open_) {
+      wait_for_ac_tab_to_open_->Quit();
+    }
+  }
+
+  int32_t GetTransactionEntryCount() {
+    content::EvalJsResult acTableCountResult = EvalJs(contents(),
+        "document.querySelector(\"[data-test-id='txTable']\")"
+        ".getElementsByTagName('tbody')[0].childNodes.length",
+        content::EXECUTE_SCRIPT_DEFAULT_OPTIONS,
+        content::ISOLATED_WORLD_ID_CONTENT_END);
+    return acTableCountResult.ExtractInt();
+  }
+
   const std::vector<double> tip_amounts_ = {1.0, 5.0, 10.0};
 
   MOCK_METHOD1(OnGetProduction, void(bool));
@@ -1068,6 +1148,12 @@ class BraveRewardsBrowserTest :
 
   std::unique_ptr<base::RunLoop> wait_for_publisher_list_normalized_loop_;
   bool publisher_list_normalized_ = false;
+
+  std::unique_ptr<base::RunLoop> wait_for_monthly_statement_to_open_loop_;
+  bool monthly_statement_opened_ = false;
+
+  std::unique_ptr<base::RunLoop> wait_for_ac_tab_to_open_;
+  bool ac_tab_opened_ = false;
 
   std::unique_ptr<base::RunLoop> wait_for_ac_completed_loop_;
   bool ac_reconcile_completed_ = false;
@@ -2224,6 +2310,49 @@ IN_PROC_BROWSER_TEST_F(BraveRewardsBrowserTest,
     EXPECT_NE(js_result2.ExtractString().find("Insufficient Funds"),
           std::string::npos);
   }
+
+  // Stop observing the Rewards service
+  rewards_service_->RemoveObserver(this);
+}
+
+IN_PROC_BROWSER_TEST_F(BraveRewardsBrowserTest, PRE_CreateMonthlyStatement) {
+  rewards_service_->AddObserver(this);
+  rewards_service_->GetNotificationService()->AddObserver(this);
+  EnableRewards();
+  // Claim grant using panel
+  const bool use_panel = true;
+  ClaimGrant(use_panel);
+
+  // Visit publishers
+  const bool verified = true;
+  while (!last_publisher_added_) {
+    VisitPublisher("duckduckgo.com", verified);
+    VisitPublisher("bumpsmack.com", verified);
+    VisitPublisher("brave.com", !verified, true);
+  }
+  rewards_service_->SetContributionAmount(10.0);
+
+  rewards_service()->StartMonthlyContributionForTest();
+
+  WaitForACReconcileCompleted();
+  ASSERT_EQ(ac_reconcile_status_, ledger::Result::LEDGER_OK);
+
+  // Stop observing the Rewards service
+  rewards_service_->RemoveObserver(this);
+}
+
+// Uses data directory from previous test -- spanning browser restart
+IN_PROC_BROWSER_TEST_F(BraveRewardsBrowserTest, CreateMonthlyStatement) {
+  rewards_service_->AddObserver(this);
+  rewards_service_->GetNotificationService()->AddObserver(this);
+
+  ui_test_utils::NavigateToURL(browser(), rewards_url());
+  WaitForLoadStop(contents());
+
+  OpenMonthlyStatements();
+  WaitForMonthlyStatementToOpen();
+
+  ASSERT_EQ(GetTransactionEntryCount(), 2);
 
   // Stop observing the Rewards service
   rewards_service_->RemoveObserver(this);

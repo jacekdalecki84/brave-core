@@ -30,6 +30,7 @@
 #include "brave/components/brave_rewards/browser/balance_report.h"
 #include "brave/components/brave_rewards/browser/content_site.h"
 #include "brave/components/brave_rewards/browser/contribution_info.h"
+#include "brave/components/brave_rewards/browser/monthly_statement.h"
 #include "ui/gfx/image/image.h"
 #include "brave/components/brave_rewards/browser/publisher_banner.h"
 #include "brave/components/brave_rewards/browser/rewards_service_private_observer.h"
@@ -249,6 +250,10 @@ class RewardsServiceImpl : public RewardsService,
              bool recurring) override;
 
   void SetPublisherMinVisitTime(uint64_t duration_in_seconds) const override;
+  void GetMonthlyStatements(
+      int32_t month,
+      uint32_t year,
+      GetMonthlyStatementListCallback callback) override;
 
   void FetchBalance(FetchBalanceCallback callback) override;
 
@@ -575,6 +580,20 @@ class RewardsServiceImpl : public RewardsService,
       ledger::Result result,
       const std::string& publisher_key,
       const std::string& publisher_name) override;
+
+  void GetAllTransactions(
+      const base::flat_map<std::string, std::string>& publisher_ac_txs,
+      int32_t month,
+      uint32_t year,
+      ledger::TransactionListCallback callback) override;
+
+  void OnGetAllTransactions(
+      ledger::TransactionListCallback callback,
+      ledger::mojom::AllTransactionsPtr transactions);
+
+  void OnGetMonthlyStatement(
+      GetMonthlyStatementListCallback callback,
+      ledger::mojom::MonthlyStatementsPtr monthly_statements);
 
   bool Connected() const;
   void ConnectionClosed();

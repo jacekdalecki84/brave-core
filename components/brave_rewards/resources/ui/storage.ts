@@ -68,7 +68,25 @@ export const defaultState: Rewards.State = {
     total: 0,
     rates: {},
     wallets: {}
-  }
+  },
+  monthlyStatement: {
+    statementItems: [],
+    balanceReport: {
+      ads: '0',
+      closing: '0',
+      contribute: '0',
+      deposit: '0',
+      donation: '0',
+      grant: '0',
+      tips: '0',
+      opening: '0',
+      total: '0'
+    },
+    monthsAvailable: [],
+    reconcileStamp: '',
+    transactions: []
+  },
+  hasMonthlyStatement: false
 }
 
 const cleanData = (state: Rewards.State) => {

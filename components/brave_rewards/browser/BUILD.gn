@@ -41,6 +41,8 @@ source_set("browser") {
     "rewards_internals_info.h",
     "balance.cc",
     "balance.h",
+    "monthly_statement.cc",
+    "monthly_statement.h"
   ]
 
   deps = [

@@ -9,10 +9,13 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "base/bind.h"
 #include "base/command_line.h"
 #include "base/files/file_util.h"
+#include "base/strings/string_split.h"
+#include "base/strings/string_number_conversions.h"
 #include "bat/ledger/media_event_info.h"
 #include "bat/ledger/pending_contribution.h"
 #include "build/build_config.h"
@@ -160,6 +163,137 @@ bool PublisherInfoDatabase::InsertContributionInfo(
   statement.BindInt(5, info.year);
 
   return statement.Run();
+}
+
+bool PublisherInfoDatabase::GetAutoContributePublishersByKeys(
+    ledger::PublisherInfoList* list,
+    const base::flat_map<std::string, std::string>& keys,
+    const int32_t month,
+    const uint32_t year) {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
+  bool initialized = Init();
+  DCHECK(initialized);
+
+  if (!initialized) {
+    return false;
+  }
+
+  sql::Statement info_sql(db_.GetUniqueStatement(
+      "SELECT pi.publisher_id, pi.name, pi.url, pi.verified, "
+      "pi.favicon, pi.provider, pi.excluded, ci.date "
+      "FROM publisher_info AS pi, contribution_info AS ci "
+      "INNER JOIN activity_info AS ai ON ai.publisher_id = pi.publisher_id "
+      "WHERE ci.category = 2 AND ci.month = ? AND ci.year = ?"));
+
+  info_sql.BindInt(0, month);
+  info_sql.BindInt(1, year);
+
+  while (info_sql.Step()) {
+    auto contribution = ledger::mojom::ContributionInfo::New();
+    auto info = ledger::PublisherInfo::New();
+    info->id = info_sql.ColumnString(0);
+    contribution->date = info_sql.ColumnInt64(7);
+
+    auto pub_pair = keys.find(info->id);
+    base::StringToDouble(
+        pub_pair->second,
+        &contribution->value);
+
+    double submit_date;
+    base::StringToDouble(
+        std::to_string(contribution->date*1000), &submit_date);
+    base::Time::Exploded exploded;
+    base::Time::FromJsTime(
+        submit_date).LocalExplode(&exploded);
+
+    if (exploded.month == month && exploded.year == (int32_t)year) {
+      info->name = info_sql.ColumnString(1);
+      info->url = info_sql.ColumnString(2);
+      info->verified = info_sql.ColumnBool(3);
+      info->favicon_url = info_sql.ColumnString(4);
+      info->provider = info_sql.ColumnString(5);
+      info->excluded = static_cast<ledger::PUBLISHER_EXCLUDE>(
+          info_sql.ColumnInt(6));
+      contribution->category = 2;
+      info->contributions.push_back(std::move(contribution));
+      list->push_back(std::move(info));
+    }
+  }
+  return true;
+}
+
+void PublisherInfoDatabase::GetAllTransactions(ledger::PublisherInfoList* list,
+                                               int32_t month,
+                                               uint32_t year) {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
+  bool initialized = Init();
+  DCHECK(initialized);
+
+  if (!initialized) {
+    return;
+  }
+
+  sql::Statement info_sql(db_.GetUniqueStatement(
+      "SELECT pi.publisher_id, pi.name, pi.url, pi.verified, pi.favicon, "
+      "pi.provider, ci.probi, ci.date, ci.category "
+      "FROM contribution_info as ci "
+      "INNER JOIN publisher_info AS pi ON ci.publisher_id = pi.publisher_id "
+      "WHERE ci.month = ? AND ci.year = ?"));
+      info_sql.BindInt(0, month);
+      info_sql.BindInt(1, year);
+
+  while (info_sql.Step()) {
+    auto publisher = ledger::PublisherInfo::New();
+
+    publisher->id = info_sql.ColumnString(0);
+    publisher->name = info_sql.ColumnString(1);
+    publisher->url = info_sql.ColumnString(2);
+    publisher->verified = info_sql.ColumnBool(3);
+    publisher->favicon_url = info_sql.ColumnString(4);
+    publisher->provider = info_sql.ColumnString(5);
+    auto contribution = ledger::mojom::ContributionInfo::New();
+    const std::string string_value = info_sql.ColumnString(6);
+    double value;
+    contribution->value = base::StringToDouble(string_value, &value)
+        ? value : 0.0;
+    contribution->date = info_sql.ColumnInt64(7);
+    contribution->category = info_sql.ColumnInt(8);
+    publisher->contributions.push_back(std::move(contribution));
+    publisher->percent = info_sql.ColumnInt(9);
+    publisher->excluded = info_sql.ColumnBool(10);
+    publisher->reconcile_stamp = info_sql.ColumnInt64(11);
+    list->push_back(std::move(publisher));
+  }
+}
+
+void PublisherInfoDatabase::GetTransactionTypes(
+    std::vector<ledger::mojom::TransactionStatementInfoPtr>* transactions,
+    int32_t month,
+    uint32_t year) {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
+  bool initialized = Init();
+  DCHECK(initialized);
+
+  if (!initialized) {
+    return;
+  }
+  sql::Statement info_sql(db_.GetUniqueStatement(
+    "SELECT DISTINCT probi, date, category "
+    "FROM contribution_info AS ci "
+    "WHERE ci.month = ? AND ci.year = ?"));
+    info_sql.BindInt(0, month);
+    info_sql.BindInt(1, year);
+
+  while (info_sql.Step()) {
+    auto transaction = ledger::mojom::TransactionStatementInfo::New();
+    transaction->probi = info_sql.ColumnString(0);
+    transaction->date = info_sql.ColumnInt64(1);
+    transaction->category = info_sql.ColumnInt(2);
+    transactions->push_back(std::move(transaction));
+  }
 }
 
 void PublisherInfoDatabase::GetOneTimeTips(ledger::PublisherInfoList* list,
