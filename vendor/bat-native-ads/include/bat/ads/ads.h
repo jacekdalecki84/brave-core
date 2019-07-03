@@ -6,6 +6,7 @@
 #ifndef BAT_ADS_ADS_H_
 #define BAT_ADS_ADS_H_
 
+#include <stdint.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -121,7 +122,7 @@ class ADS_EXPORT Ads {
       const NotificationResultInfoResultType type) = 0;
 
   // Should be called to retrieve ads history
-  virtual std::map<std::string, std::vector<AdsHistory>> GetAdsHistory() = 0;
+  virtual std::map<uint64_t, std::vector<AdsHistory>> GetAdsHistory() = 0;
 
   // Should be called to indicate interest in the given ad. This is a
   // toggle, so calling it again returns the setting to the neutral

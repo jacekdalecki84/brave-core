@@ -185,14 +185,18 @@ class AdsBox extends React.Component<Props, State> {
     return adHistoryData.map((item: Rewards.AdsHistoryData) => {
       return {
         id: item.id,
-        date: item.date,
+        date: new Date(item.timestampInMilliseconds).toLocaleDateString(),
         adDetailRows: (
           item.adDetailRows.map((itemDetail: Rewards.AdHistoryDetail) => {
+            let brandInfo = itemDetail.adContent.brandInfo
+            if (brandInfo.length > 50) {
+              brandInfo = brandInfo.substring(0, 50) + '...'
+            }
             const adContent: Rewards.AdContent = {
               uuid: itemDetail.adContent.uuid,
               creativeSetId: itemDetail.adContent.creativeSetId,
               brand: itemDetail.adContent.brand,
-              brandInfo: itemDetail.adContent.brandInfo,
+              brandInfo: brandInfo,
               brandLogo: itemDetail.adContent.brandLogo,
               brandDisplayUrl: itemDetail.adContent.brandDisplayUrl,
               brandUrl: itemDetail.adContent.brandUrl,
@@ -250,10 +254,10 @@ class AdsBox extends React.Component<Props, State> {
   }
 
   render () {
-    const adsPerHour = 2
     const savedOnly: boolean = false
 
     let adsEnabled = false
+    let adsPerHour = 0
     let adsUIEnabled = false
     let adsIsSupported = false
     let estimatedPendingRewards = '0'
@@ -270,6 +274,7 @@ class AdsBox extends React.Component<Props, State> {
 
     if (adsData) {
       adsEnabled = adsData.adsEnabled
+      adsPerHour = adsData.adsPerHour
       adsUIEnabled = adsData.adsUIEnabled
       adsIsSupported = adsData.adsIsSupported
       estimatedPendingRewards = (adsData.adsEstimatedPendingRewards || 0).toFixed(2)

@@ -13,6 +13,7 @@
 #include "bat/ads/ads.h"
 #include "bat/ads/ads_history.h"
 #include "bat/ads/category_content.h"
+#include "bat/ads/confirmation_type.h"
 #include "brave/components/services/bat_ads/bat_ads_client_mojo_bridge.h"
 #include "mojo/public/cpp/bindings/map.h"
 
@@ -33,7 +34,7 @@ ads::CategoryContent::OptAction ToAdsOptAction(int action) {
   return static_cast<ads::CategoryContent::OptAction>(action);
 }
 
-}
+}  // namespace
 
 BatAdsImpl::BatAdsImpl(mojom::BatAdsClientAssociatedPtrInfo client_info)
     : bat_ads_client_mojo_proxy_(
@@ -126,7 +127,7 @@ void BatAdsImpl::GenerateAdReportingNotificationResultEvent(
 }
 
 void BatAdsImpl::GetAdsHistory(GetAdsHistoryCallback callback) {
-  std::map<std::string, std::vector<std::string>> result;
+  std::map<uint64_t, std::vector<std::string>> result;
 
   auto ads_history_map = ads_->GetAdsHistory();
   for (const auto& entry : ads_history_map) {

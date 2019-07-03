@@ -86,7 +86,7 @@ class AdsImpl : public Ads {
 
   void SetConfirmationsIsReady(const bool is_ready) override;
 
-  std::map<std::string, std::vector<AdsHistory>> GetAdsHistory() override;
+  std::map<uint64_t, std::vector<AdsHistory>> GetAdsHistory() override;
 
   AdContent::LikeAction ToggleAdThumbUp(const std::string& id,
                                         const std::string& creative_set_id,
@@ -175,7 +175,10 @@ class AdsImpl : public Ads {
   void StopSustainingAdInteraction();
   bool IsSustainingAdInteraction() const;
   bool IsStillViewingAd() const;
-  void ConfirmAd(const NotificationInfo& info, const ConfirmationType type);
+  void ConfirmAd(const NotificationInfo& info, const ConfirmationType& type);
+  void ConfirmAction(const std::string& uuid,
+                     const std::string& creative_set_id,
+                     const ConfirmationType& type);
 
   void OnTimer(const uint32_t timer_id) override;
 
@@ -186,6 +189,8 @@ class AdsImpl : public Ads {
       const NotificationInfo& info,
       const NotificationResultInfoResultType type) override;
   void GenerateAdReportingConfirmationEvent(const NotificationInfo& info);
+  void GenerateAdReportingConfirmationEvent(const std::string& uuid,
+                                            const ConfirmationType& type);
   void GenerateAdReportingLoadEvent(const LoadInfo& info);
   void GenerateAdReportingBackgroundEvent();
   void GenerateAdReportingForegroundEvent();
@@ -199,6 +204,7 @@ class AdsImpl : public Ads {
                                const ConfirmationType& type);
 
   bool IsNotificationFromSampleCatalog(const NotificationInfo& info) const;
+  bool IsCreativeSetFromSampleCatalog(const std::string& creative_set_id) const;
 
   bool IsSupportedUrl(const std::string& url) const;
   bool UrlHostsMatch(const std::string& url_1, const std::string& url_2) const;
