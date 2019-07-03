@@ -104,3 +104,15 @@ struct AutoContributeProps {
   bool contribution_videos;
   uint64 reconcile_stamp;
 };
+
+struct BalanceReportInfo {
+  string opening_balance;
+  string closing_balance;
+  string deposits;
+  string grants;
+  string earning_from_ads;
+  string auto_contribute;
+  string recurring_donation;
+  string one_time_donation;
+  string total;
+};
