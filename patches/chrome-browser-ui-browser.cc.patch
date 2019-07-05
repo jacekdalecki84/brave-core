@@ -1,0 +1,12 @@
+diff --git a/chrome/browser/ui/browser.cc b/chrome/browser/ui/browser.cc
+index bac1e524636c5046248c7fc3b4317ec8cb29574f..43a2466d3bcc144efaca7160d7141c4c7d35a4ec 100644
+--- a/chrome/browser/ui/browser.cc
++++ b/chrome/browser/ui/browser.cc
+@@ -466,6 +466,7 @@ Browser::Browser(const CreateParams& params)
+                           base::Unretained(this),
+                           BOOKMARK_BAR_STATE_CHANGE_PREF_CHANGE));
+ 
++  RegisterAlwaysShowBookmarkBarOnNTPChange
+   if (search::IsInstantExtendedAPIEnabled() && is_type_tabbed())
+     instant_controller_.reset(new BrowserInstantController(this));
+ 
