@@ -95,3 +95,9 @@ struct Balance {
   map<string, double> rates;
   map<string, double> wallets;
 };
+
+struct MediaEventInfo {
+  string event;
+  string time;
+  string status;
+};
