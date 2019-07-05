@@ -3335,6 +3335,7 @@ void RewardsServiceImpl::GetExternalWallets(
 void RewardsServiceImpl::OnGetExternalWallet(
     const std::string& wallet_type,
     GetExternalWalletCallback callback,
+    int32_t result,
     ledger::ExternalWalletPtr wallet) {
   auto external =
       std::make_unique<brave_rewards::ExternalWallet>();
@@ -3351,7 +3352,7 @@ void RewardsServiceImpl::OnGetExternalWallet(
     external->account_url = wallet->account_url;
   }
 
-  std::move(callback).Run(std::move(external));
+  std::move(callback).Run(result, std::move(external));
 }
 
 void RewardsServiceImpl::GetExternalWallet(const std::string& wallet_type,
