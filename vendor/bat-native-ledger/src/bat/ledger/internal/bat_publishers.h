@@ -105,7 +105,7 @@ class BatPublishers : public ledger::LedgerCallbackHandler {
                             ledger::ReportType type,
                             const std::string& probi);
 
-  ledger::ActivityInfoFilter CreateActivityFilter(
+  ledger::ActivityInfoFilterPtr CreateActivityFilter(
       const std::string& publisher_id,
       ledger::EXCLUDE_FILTER excluded,
       bool min_duration,

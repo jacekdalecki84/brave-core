@@ -360,7 +360,8 @@ TEST_F(PublisherInfoDatabaseTest, GetExcludedList) {
    */
   ledger::ActivityInfoFilter filter;
   filter.excluded = ledger::EXCLUDE_FILTER::FILTER_INCLUDED;
-  success = publisher_info_database_->GetActivityList(0, 0, filter, &pub_list);
+  success = publisher_info_database_->GetActivityList(0, 0,
+      filter.Clone(), &pub_list);
   EXPECT_TRUE(success);
   EXPECT_EQ(1UL, pub_list.size());
 
@@ -618,7 +619,7 @@ TEST_F(PublisherInfoDatabaseTest, GetPanelPublisher) {
    * Publisher ID is missing
    */
   ledger::ActivityInfoFilter filter_1;
-  EXPECT_EQ(publisher_info_database_->GetPanelPublisher(filter_1),
+  EXPECT_EQ(publisher_info_database_->GetPanelPublisher(filter_1.Clone()),
             static_cast<ledger::PublisherInfoPtr>(nullptr));
 
   /**
@@ -626,7 +627,7 @@ TEST_F(PublisherInfoDatabaseTest, GetPanelPublisher) {
    */
   ledger::ActivityInfoFilter filter_2;
   filter_2.id = "test";
-  EXPECT_EQ(publisher_info_database_->GetPanelPublisher(filter_2),
+  EXPECT_EQ(publisher_info_database_->GetPanelPublisher(filter_2.Clone()),
             static_cast<ledger::PublisherInfoPtr>(nullptr));
 
   /**
@@ -645,7 +646,7 @@ TEST_F(PublisherInfoDatabaseTest, GetPanelPublisher) {
   filter_4.id = "page.com";
   filter_4.reconcile_stamp = 10;
   ledger::PublisherInfoPtr result =
-      publisher_info_database_->GetPanelPublisher(filter_4);
+      publisher_info_database_->GetPanelPublisher(filter_4.Clone());
   EXPECT_TRUE(result);
   EXPECT_EQ(result->id, "page.com");
   EXPECT_EQ(result->percent, 0u);
@@ -835,7 +836,7 @@ TEST_F(PublisherInfoDatabaseTest, GetActivityList) {
   filter_1.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL;
   EXPECT_TRUE(publisher_info_database_->GetActivityList(0,
                                                         0,
-                                                        filter_1,
+                                                        filter_1.Clone(),
                                                         &list_1));
   EXPECT_EQ(static_cast<int>(list_1.size()), 2);
 
@@ -851,7 +852,7 @@ TEST_F(PublisherInfoDatabaseTest, GetActivityList) {
   filter_2.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL;
   EXPECT_TRUE(publisher_info_database_->GetActivityList(0,
                                                         0,
-                                                        filter_2,
+                                                        filter_2.Clone(),
                                                         &list_2));
   EXPECT_EQ(static_cast<int>(list_2.size()), 2);
 
@@ -866,7 +867,7 @@ TEST_F(PublisherInfoDatabaseTest, GetActivityList) {
   filter_3.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL_EXCEPT_EXCLUDED;
   EXPECT_TRUE(publisher_info_database_->GetActivityList(0,
                                                         0,
-                                                        filter_3,
+                                                        filter_3.Clone(),
                                                         &list_3));
   EXPECT_EQ(static_cast<int>(list_3.size()), 5);
 
@@ -885,7 +886,7 @@ TEST_F(PublisherInfoDatabaseTest, GetActivityList) {
   filter_4.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL;
   EXPECT_TRUE(publisher_info_database_->GetActivityList(0,
                                                         0,
-                                                        filter_4,
+                                                        filter_4.Clone(),
                                                         &list_4));
   EXPECT_EQ(static_cast<int>(list_4.size()), 2);
 
@@ -902,7 +903,8 @@ TEST_F(PublisherInfoDatabaseTest, Migrationv3tov4) {
   ledger::PublisherInfoList list;
   ledger::ActivityInfoFilter filter;
   filter.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL;
-  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0, filter, &list));
+  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0,
+      filter.Clone(), &list));
   EXPECT_EQ(static_cast<int>(list.size()), 2);
 
   EXPECT_EQ(list.at(0)->id, "slo-tech.com");
@@ -923,7 +925,8 @@ TEST_F(PublisherInfoDatabaseTest, Migrationv4tov5) {
   ledger::PublisherInfoList list;
   ledger::ActivityInfoFilter filter;
   filter.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL;
-  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0, filter, &list));
+  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0,
+      filter.Clone(), &list));
   EXPECT_EQ(static_cast<int>(list.size()), 3);
 
   EXPECT_EQ(list.at(0)->id, "brave.com");
@@ -946,7 +949,8 @@ TEST_F(PublisherInfoDatabaseTest, Migrationv5tov6) {
   ledger::PublisherInfoList list;
   ledger::ActivityInfoFilter filter;
   filter.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL;
-  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0, filter, &list));
+  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0,
+      filter.Clone(), &list));
   EXPECT_EQ(static_cast<int>(list.size()), 3);
 
   EXPECT_EQ(list.at(0)->id, "basicattentiontoken.org");
@@ -987,7 +991,8 @@ TEST_F(PublisherInfoDatabaseTest, Migrationv4tov6) {
   ledger::PublisherInfoList list;
   ledger::ActivityInfoFilter filter;
   filter.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL;
-  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0, filter, &list));
+  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0,
+      filter.Clone(), &list));
   EXPECT_EQ(static_cast<int>(list.size()), 3);
 
   EXPECT_EQ(list.at(0)->id, "basicattentiontoken.org");
@@ -1048,7 +1053,8 @@ TEST_F(PublisherInfoDatabaseTest, DeleteActivityInfo) {
   ledger::PublisherInfoList list;
   ledger::ActivityInfoFilter filter;
   filter.excluded = ledger::EXCLUDE_FILTER::FILTER_ALL;
-  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0, filter, &list));
+  EXPECT_TRUE(publisher_info_database_->GetActivityList(0, 0,
+      filter.Clone(), &list));
   EXPECT_EQ(static_cast<int>(list.size()), 2);
 
   EXPECT_EQ(list.at(0)->id, "publisher_1");

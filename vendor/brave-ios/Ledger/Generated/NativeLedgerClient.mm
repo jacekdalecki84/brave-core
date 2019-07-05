@@ -23,8 +23,8 @@ void NativeLedgerClient::FetchGrants(const std::string & lang, const std::string
 std::string NativeLedgerClient::GenerateGUID() const {
   return [bridge_ generateGUID];
 }
-void NativeLedgerClient::GetActivityInfoList(uint32_t start, uint32_t limit, ledger::ActivityInfoFilter filter, ledger::PublisherInfoListCallback callback) {
-  [bridge_ getActivityInfoList:start limit:limit filter:filter callback:callback];
+void NativeLedgerClient::GetActivityInfoList(uint32_t start, uint32_t limit, ledger::ActivityInfoFilterPtr filter, ledger::PublisherInfoListCallback callback) {
+  [bridge_ getActivityInfoList:start limit:limit filter:std::move(filter) callback:callback];
 }
 void NativeLedgerClient::GetCountryCodes(const std::vector<std::string> & countries, ledger::GetCountryCodesCallback callback) {
   [bridge_ getCountryCodes:countries callback:callback];
@@ -44,8 +44,8 @@ void NativeLedgerClient::GetRecurringTips(ledger::PublisherInfoListCallback call
 void NativeLedgerClient::KillTimer(const uint32_t timer_id) {
   [bridge_ killTimer:timer_id];
 }
-void NativeLedgerClient::LoadActivityInfo(ledger::ActivityInfoFilter filter, ledger::PublisherInfoCallback callback) {
-  [bridge_ loadActivityInfo:filter callback:callback];
+void NativeLedgerClient::LoadActivityInfo(ledger::ActivityInfoFilterPtr filter, ledger::PublisherInfoCallback callback) {
+  [bridge_ loadActivityInfo:std::move(filter) callback:callback];
 }
 void NativeLedgerClient::LoadLedgerState(ledger::LedgerCallbackHandler * handler) {
   [bridge_ loadLedgerState:handler];
@@ -56,8 +56,8 @@ void NativeLedgerClient::LoadMediaPublisherInfo(const std::string & media_key, l
 void NativeLedgerClient::LoadNicewareList(ledger::GetNicewareListCallback callback) {
   [bridge_ loadNicewareList:callback];
 }
-void NativeLedgerClient::LoadPanelPublisherInfo(ledger::ActivityInfoFilter filter, ledger::PublisherInfoCallback callback) {
-  [bridge_ loadPanelPublisherInfo:filter callback:callback];
+void NativeLedgerClient::LoadPanelPublisherInfo(ledger::ActivityInfoFilterPtr filter, ledger::PublisherInfoCallback callback) {
+  [bridge_ loadPanelPublisherInfo:std::move(filter) callback:callback];
 }
 void NativeLedgerClient::LoadPublisherInfo(const std::string & publisher_key, ledger::PublisherInfoCallback callback) {
   [bridge_ loadPublisherInfo:publisher_key callback:callback];

@@ -651,7 +651,7 @@ void YouTube::GetPublisherPanleInfo(
     ledger_->GetReconcileStamp(),
     true,
     false);
-  ledger_->GetPanelPublisherInfo(filter,
+  ledger_->GetPanelPublisherInfo(std::move(filter),
     std::bind(&YouTube::OnPublisherPanleInfo,
               this,
               window_id,

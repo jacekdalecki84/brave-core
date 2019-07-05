@@ -56,7 +56,7 @@ class BatLedgerClientMojoProxy : public ledger::LedgerClient,
                          ledger::PublisherInfoCallback callback) override;
   void LoadPublisherInfo(const std::string& publisher_key,
                          ledger::PublisherInfoCallback callback) override;
-  void LoadPanelPublisherInfo(ledger::ActivityInfoFilter filter,
+  void LoadPanelPublisherInfo(ledger::ActivityInfoFilterPtr filter,
                               ledger::PublisherInfoCallback callback) override;
   void SavePublishersList(const std::string& publishers_list,
                           ledger::LedgerCallbackHandler* handler) override;
@@ -107,7 +107,7 @@ class BatLedgerClientMojoProxy : public ledger::LedgerClient,
   void SavePendingContribution(
       ledger::PendingContributionList list) override;
 
-  void LoadActivityInfo(ledger::ActivityInfoFilter filter,
+  void LoadActivityInfo(ledger::ActivityInfoFilterPtr filter,
                         ledger::PublisherInfoCallback callback) override;
 
   void SaveActivityInfo(ledger::PublisherInfoPtr publisher_info,
@@ -117,7 +117,7 @@ class BatLedgerClientMojoProxy : public ledger::LedgerClient,
 
   void GetActivityInfoList(uint32_t start,
                            uint32_t limit,
-                           ledger::ActivityInfoFilter filter,
+                           ledger::ActivityInfoFilterPtr filter,
                            ledger::PublisherInfoListCallback callback) override;
 
   void SaveNormalizedPublisherList(

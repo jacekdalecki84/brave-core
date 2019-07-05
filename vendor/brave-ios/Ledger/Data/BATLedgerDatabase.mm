@@ -8,7 +8,7 @@
 #import "CoreDataModels.h"
 #import "bat/ledger/publisher_info.h"
 
-NS_INLINE DataControllerCompletion _Nullable 
+NS_INLINE DataControllerCompletion _Nullable
 WriteToDataControllerCompletion(BATLedgerDatabaseWriteCompletion _Nullable completion) {
   if (!completion) {
     return nil;
@@ -165,14 +165,14 @@ WriteToDataControllerCompletion(BATLedgerDatabaseWriteCompletion _Nullable compl
   const auto fetchRequest = PublisherInfo.fetchRequest;
   fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PublisherInfo.class)
                                     inManagedObjectContext:context];
-  fetchRequest.predicate = [NSPredicate predicateWithFormat:@"excluded == %d", BATExcludeFilterFilterExcluded];
-  
+  fetchRequest.predicate = [NSPredicate predicateWithFormat:@"excluded == %d", BATEXCLUDE_FILTERFilterExcluded];
+
   NSError *error;
   const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
   if (error) {
     NSLog(@"%@", error);
   }
-  
+
   const auto publishers = [[NSMutableArray<BATPublisherInfo *> alloc] init];
   for (PublisherInfo *publisher in fetchedObjects) {
     auto info = [[BATPublisherInfo alloc] init];
@@ -348,11 +348,11 @@ WriteToDataControllerCompletion(BATLedgerDatabaseWriteCompletion _Nullable compl
     [predicates addObject:[NSPredicate predicateWithFormat:@"duration >= %ld", filter.minDuration]];
   }
 
-  if (filter.excluded != BATExcludeFilterFilterAll) {
-    if (filter.excluded != BATExcludeFilterFilterAllExceptExcluded) {
+  if (filter.excluded != BATEXCLUDE_FILTERFilterAll) {
+    if (filter.excluded != BATEXCLUDE_FILTERFilterAllExceptExcluded) {
       [predicates addObject:[NSPredicate predicateWithFormat:@"publisher.excluded == %d", filter.excluded]];
     } else {
-      [predicates addObject:[NSPredicate predicateWithFormat:@"publisher.excluded != %d", BATExcludeFilterFilterExcluded]];
+      [predicates addObject:[NSPredicate predicateWithFormat:@"publisher.excluded != %d", BATEXCLUDE_FILTERFilterExcluded]];
     }
   }
 
@@ -523,13 +523,13 @@ WriteToDataControllerCompletion(BATLedgerDatabaseWriteCompletion _Nullable compl
   const auto fetchRequest = PendingContribution.fetchRequest;
   fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PendingContribution.class)
                                     inManagedObjectContext:context];
-  
+
   NSError *error;
   const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
   if (error) {
     NSLog(@"%@", error);
   }
-  
+
   const auto publishers = [[NSMutableArray<BATPendingContributionInfo *> alloc] init];
   for (PendingContribution *pc in fetchedObjects) {
     auto info = [[BATPendingContributionInfo alloc] init];
@@ -577,7 +577,7 @@ WriteToDataControllerCompletion(BATLedgerDatabaseWriteCompletion _Nullable compl
     if (completion) { completion(NO); }
     return;
   }
-  
+
   [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
     const auto pendingContribution = [self getPendingContributonWithPublisherID:publisherID
                                                                       viewingID:viewingID
@@ -593,7 +593,7 @@ WriteToDataControllerCompletion(BATLedgerDatabaseWriteCompletion _Nullable compl
     const auto fetchRequest = PendingContribution.fetchRequest;
     fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PendingContribution.class)
                                       inManagedObjectContext:context];
-    
+
     NSError *error;
     const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
     if (error) {
@@ -601,7 +601,7 @@ WriteToDataControllerCompletion(BATLedgerDatabaseWriteCompletion _Nullable compl
       completion(NO);
       return;
     }
-    
+
     for (PendingContribution *pc in fetchedObjects) {
       [context deleteObject:pc];
     }

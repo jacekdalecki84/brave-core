@@ -108,23 +108,24 @@ void BatPublishers::saveVisit(const std::string& publisher_id,
                 callback,
                 _1,
                 _2);
-  ledger_->GetActivityInfo(filter, callbackGetPublishers);
+
+  ledger_->GetActivityInfo(std::move(filter), callbackGetPublishers);
 }
 
-ledger::ActivityInfoFilter BatPublishers::CreateActivityFilter(
+ledger::ActivityInfoFilterPtr BatPublishers::CreateActivityFilter(
     const std::string& publisher_id,
     ledger::EXCLUDE_FILTER excluded,
     bool min_duration,
     const uint64_t& currentReconcileStamp,
     bool non_verified,
     bool min_visits) {
-  ledger::ActivityInfoFilter filter;
-  filter.id = publisher_id;
-  filter.excluded = excluded;
-  filter.min_duration = min_duration ? getPublisherMinVisitTime() : 0;
-  filter.reconcile_stamp = currentReconcileStamp;
-  filter.non_verified = non_verified;
-  filter.min_visits = min_visits ? getPublisherMinVisits() : 0;
+  ledger::ActivityInfoFilterPtr filter = ledger::ActivityInfoFilter::New();
+  filter->id = publisher_id;
+  filter->excluded = excluded;
+  filter->min_duration = min_duration ? getPublisherMinVisitTime() : 0;
+  filter->reconcile_stamp = currentReconcileStamp;
+  filter->non_verified = non_verified;
+  filter->min_visits = min_visits ? getPublisherMinVisits() : 0;
 
   return filter;
 }
@@ -507,7 +508,7 @@ void BatPublishers::SynopsisNormalizer() {
   ledger_->GetActivityInfoList(
       0,
       0,
-      filter,
+      std::move(filter),
       std::bind(&BatPublishers::SynopsisNormalizerCallback, this, _1, _2));
 }
 
@@ -754,7 +755,7 @@ void BatPublishers::getPublisherActivityFromUrl(
   new_data.url = visit_data.url;
   new_data.favicon_url = "";
 
-  ledger_->GetPanelPublisherInfo(filter,
+  ledger_->GetPanelPublisherInfo(std::move(filter),
         std::bind(&BatPublishers::OnPanelPublisherInfo,
                   this,
                   _1,

@@ -402,7 +402,7 @@ void Twitter::GetPublisherPanelInfo(
     ledger_->GetReconcileStamp(),
     true,
     false);
-  ledger_->GetPanelPublisherInfo(filter,
+  ledger_->GetPanelPublisherInfo(std::move(filter),
     std::bind(&Twitter::OnPublisherPanelInfo,
               this,
               window_id,

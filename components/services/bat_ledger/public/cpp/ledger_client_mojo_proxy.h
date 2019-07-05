@@ -53,7 +53,7 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
       SavePublisherInfoCallback callback) override;
   void LoadPublisherInfo(const std::string& publisher_key,
       LoadPublisherInfoCallback callback) override;
-  void LoadPanelPublisherInfo(const std::string& filter,
+  void LoadPanelPublisherInfo(ledger::ActivityInfoFilterPtr filter,
       LoadPanelPublisherInfoCallback callback) override;
   void LoadMediaPublisherInfo(const std::string& media_key,
       LoadMediaPublisherInfoCallback callback) override;
@@ -95,7 +95,7 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
 
   void SavePendingContribution(ledger::PendingContributionList list) override;
 
-  void LoadActivityInfo(const std::string& filter,
+  void LoadActivityInfo(ledger::ActivityInfoFilterPtr filter,
       LoadActivityInfoCallback callback) override;
 
   void SaveActivityInfo(ledger::PublisherInfoPtr publisher_info,
@@ -105,7 +105,7 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
 
   void GetActivityInfoList(uint32_t start,
                            uint32_t limit,
-                           const std::string& filter,
+                           ledger::ActivityInfoFilterPtr filter,
                            GetActivityInfoListCallback callback) override;
 
   void SaveNormalizedPublisherList(

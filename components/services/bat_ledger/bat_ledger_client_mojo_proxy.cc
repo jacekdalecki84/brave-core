@@ -369,13 +369,13 @@ void OnLoadPanelPublisherInfo(
 }
 
 void BatLedgerClientMojoProxy::LoadPanelPublisherInfo(
-    ledger::ActivityInfoFilter filter,
+    ledger::ActivityInfoFilterPtr filter,
     ledger::PublisherInfoCallback callback) {
   if (!Connected()) {
     return;
   }
 
-  bat_ledger_client_->LoadPanelPublisherInfo(filter.ToJson(),
+  bat_ledger_client_->LoadPanelPublisherInfo(std::move(filter),
       base::BindOnce(&OnLoadPanelPublisherInfo, std::move(callback)));
 }
 
@@ -575,14 +575,14 @@ void OnLoadActivityInfo(
 }
 
 void BatLedgerClientMojoProxy::LoadActivityInfo(
-    ledger::ActivityInfoFilter filter,
+    ledger::ActivityInfoFilterPtr filter,
     ledger::PublisherInfoCallback callback) {
   if (!Connected()) {
     callback(ledger::Result::LEDGER_ERROR, nullptr);
     return;
   }
 
-  bat_ledger_client_->LoadActivityInfo(filter.ToJson(),
+  bat_ledger_client_->LoadActivityInfo(std::move(filter),
       base::BindOnce(&OnLoadActivityInfo, std::move(callback)));
 }
 
@@ -630,7 +630,7 @@ void OnGetActivityInfoList(const ledger::PublisherInfoListCallback& callback,
 
 void BatLedgerClientMojoProxy::GetActivityInfoList(uint32_t start,
     uint32_t limit,
-    ledger::ActivityInfoFilter filter,
+    ledger::ActivityInfoFilterPtr filter,
     ledger::PublisherInfoListCallback callback) {
   if (!Connected()) {
     callback(ledger::PublisherInfoList(), 0);
@@ -639,7 +639,7 @@ void BatLedgerClientMojoProxy::GetActivityInfoList(uint32_t start,
 
   bat_ledger_client_->GetActivityInfoList(start,
       limit,
-      filter.ToJson(),
+      std::move(filter),
       base::BindOnce(&OnGetActivityInfoList, std::move(callback)));
 }
 
