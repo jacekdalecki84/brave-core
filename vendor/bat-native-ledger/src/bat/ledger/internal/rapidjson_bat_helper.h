@@ -16,9 +16,7 @@
 namespace ledger {
 
 struct BalanceReportInfo;
-struct ReconcileInfo;
 struct ActivityInfoFilter;
-struct RewardsInternalsInfo;
 
 }  // namespace ledger
 

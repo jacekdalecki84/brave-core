@@ -24,14 +24,6 @@
 - (instancetype)initWithBalanceReportInfo:(const ledger::BalanceReportInfo&)obj;
 @end
 
-@interface BATReconcileInfo (Private)
-- (instancetype)initWithReconcileInfo:(const ledger::ReconcileInfo&)obj;
-@end
-
-@interface BATRewardsInternalsInfo (Private)
-- (instancetype)initWithRewardsInternalsInfo:(const ledger::RewardsInternalsInfo&)obj;
-@end
-
 @interface BATTransactionInfo (Private)
 - (instancetype)initWithTransactionInfo:(const ledger::TransactionInfo&)obj;
 @end

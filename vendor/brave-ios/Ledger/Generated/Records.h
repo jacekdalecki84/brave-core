@@ -5,7 +5,7 @@
 #import <Foundation/Foundation.h>
 #import "Enums.h"
 
-@class BATBalanceReportInfo, BATReconcileInfo, BATRewardsInternalsInfo, BATTransactionInfo, BATTransactionsInfo, BATMediaEventInfo;
+@class BATBalanceReportInfo, BATTransactionInfo, BATTransactionsInfo, BATMediaEventInfo;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,24 +20,6 @@ NS_SWIFT_NAME(BalanceReportInfo)
 @property (nonatomic) NSString * recurringDonation;
 @property (nonatomic) NSString * oneTimeDonation;
 @property (nonatomic) NSString * total;
-@end
-
-NS_SWIFT_NAME(ReconcileInfo)
-@interface BATReconcileInfo : NSObject
-@property (nonatomic) NSString * viewingid;
-@property (nonatomic) NSString * amount;
-@property (nonatomic) BATContributionRetry retryStep;
-@property (nonatomic) int retryLevel;
-@end
-
-NS_SWIFT_NAME(RewardsInternalsInfo)
-@interface BATRewardsInternalsInfo : NSObject
-@property (nonatomic) NSString * paymentId;
-@property (nonatomic) bool isKeyInfoSeedValid;
-@property (nonatomic) NSString * personaId;
-@property (nonatomic) NSString * userId;
-@property (nonatomic) unsigned long long bootStamp;
-@property (nonatomic) NSDictionary<NSString *, BATReconcileInfo *> * currentReconciles;
 @end
 
 NS_SWIFT_NAME(TransactionInfo)

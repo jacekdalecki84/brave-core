@@ -50,6 +50,8 @@ using GetAddressesCallback =
 using HasSufficientBalanceToReconcileCallback = std::function<void(bool)>;
 using FetchBalanceCallback = std::function<void(ledger::Result,
                                                 ledger::BalancePtr)>;
+using RewardsInternalsInfoCallback =
+    std::function<void(ledger::RewardsInternalsInfoPtr)>;
 
 class LEDGER_EXPORT Ledger {
  public:
@@ -233,7 +235,8 @@ class LEDGER_EXPORT Ledger {
   virtual void ConfirmAd(const std::string& info) = 0;
   virtual void GetTransactionHistory(
       GetTransactionHistoryCallback callback) = 0;
-  virtual void GetRewardsInternalsInfo(ledger::RewardsInternalsInfo* info) = 0;
+  virtual void GetRewardsInternalsInfo(
+      ledger::RewardsInternalsInfoCallback callback) = 0;
 
   virtual void GetRecurringTips(ledger::PublisherInfoListCallback callback) = 0;
 
