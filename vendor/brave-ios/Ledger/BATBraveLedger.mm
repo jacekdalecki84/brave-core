@@ -78,7 +78,6 @@ NS_INLINE int BATGetPublisherYear(NSDate *date) {
 
 /// Temporary blocks
 
-@property (nonatomic, copy, nullable) void (^walletInitializedBlock)(const ledger::Result result);
 @property (nonatomic, copy, nullable) void (^walletRecoveredBlock)(const ledger::Result result, const double balance, std::vector<ledger::GrantPtr> grants);
 @property (nonatomic, copy, nullable) void (^grantCaptchaBlock)(const std::string& image, const std::string& hint);
 
@@ -110,7 +109,9 @@ NS_INLINE int BATGetPublisherYear(NSDate *date) {
 
     ledgerClient = new NativeLedgerClient(self);
     ledger = ledger::Ledger::CreateInstance(ledgerClient);
-    ledger->Initialize();
+    ledger->Initialize(^(int32_t result){
+      // TODO(jkuki) handle if needed
+    });
 
     // Add notifications for standard app foreground/background
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(applicationDidBecomeActive) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -181,7 +182,12 @@ BATLedgerReadonlyBridge(BOOL, isWalletCreated, IsWalletCreated)
 - (void)createWallet:(void (^)(NSError * _Nullable))completion
 {
   const auto __weak weakSelf = self;
-  self.walletInitializedBlock = ^(const ledger::Result result) {
+  // Results that can come from CreateWallet():
+  //   - WALLET_CREATED: Good to go
+  //   - LEDGER_ERROR: Already initialized
+  //   - BAD_REGISTRATION_RESPONSE: Request credentials call failure or malformed data
+  //   - REGISTRATION_VERIFICATION_FAILED: Missing master user token
+  ledger->CreateWallet(^(const int32_t result) {
     const auto strongSelf = weakSelf;
     if (!strongSelf) { return; }
     NSError *error = nil;
@@ -192,37 +198,26 @@ BATLedgerReadonlyBridge(BOOL, isWalletCreated, IsWalletCreated)
         { ledger::Result::REGISTRATION_VERIFICATION_FAILED, "Missing master user token from registered persona" },
       };
       NSDictionary *userInfo = @{};
-      const auto description = errorDescriptions[result];
+      const auto description = errorDescriptions[static_cast<ledger::Result>(result)];
       if (description.length() > 0) {
         userInfo = @{ NSLocalizedDescriptionKey: [NSString stringWithUTF8String:description.c_str()] };
       }
-      error = [NSError errorWithDomain:BATBraveLedgerErrorDomain code:result userInfo:userInfo];
+      error = [NSError errorWithDomain:BATBraveLedgerErrorDomain code:static_cast<ledger::Result>(result) userInfo:userInfo];
     }
     if (completion) {
       strongSelf.enabled = YES;
       strongSelf.autoContributeEnabled = YES;
       strongSelf.ads.enabled = YES;
       [strongSelf startNotificationTimers];
-      strongSelf.walletInitializedBlock = nil;
       dispatch_async(dispatch_get_main_queue(), ^{
         completion(error);
       });
     }
-  };
-  // Results that can come from CreateWallet():
-  //   - WALLET_CREATED: Good to go
-  //   - LEDGER_ERROR: Already initialized
-  //   - BAD_REGISTRATION_RESPONSE: Request credentials call failure or malformed data
-  //   - REGISTRATION_VERIFICATION_FAILED: Missing master user token
-  ledger->CreateWallet();
+  });
 }
 
 - (void)onWalletInitialized:(ledger::Result)result
 {
-  if (self.walletInitializedBlock) {
-    self.walletInitializedBlock(result);
-  }
-  
   for (BATBraveLedgerObserver *observer in self.observers) {
     if (observer.walletInitalized) {
       observer.walletInitalized(static_cast<BATResult>(result));
@@ -544,7 +539,7 @@ BATLedgerReadonlyBridge(double, defaultContributionAmount, GetDefaultContributio
                        userInfo:nil
                  notificationID:[self notificationIDForGrant:std::move(grant)]
                        onlyOnce:YES];
-    
+
     for (BATBraveLedgerObserver *observer in self.observers) {
       if (observer.grantAdded) {
         observer.grantAdded(bridgedGrant);
@@ -813,7 +808,7 @@ BATLedgerReadonlyBridge(BOOL, isEnabled, GetRewardsMainEnabled)
 - (void)setEnabled:(BOOL)enabled
 {
   ledger->SetRewardsMainEnabled(enabled);
-  
+
   for (BATBraveLedgerObserver *observer in self.observers) {
     if (observer.rewardsEnabledStateUpdated) {
       observer.rewardsEnabledStateUpdated(enabled);
@@ -1480,7 +1475,7 @@ BATLedgerBridge(BOOL,
   const auto publisherID = [NSString stringWithUTF8String:publisher_key.c_str()];
   [BATLedgerDatabase removeRecurringTipWithPublisherID:publisherID completion:^(BOOL success) {
     callback(success ? ledger::Result::LEDGER_OK : ledger::Result::LEDGER_ERROR);
-    
+
     if (success) {
       for (BATBraveLedgerObserver *observer in self.observers) {
         if (observer.recurringTipRemoved) {
@@ -1624,7 +1619,7 @@ BATLedgerBridge(BOOL,
   for (BATPendingContributionInfo *info in pendingContributions) {
     [keys addObject:info.publisherKey];
   }
-  
+
   [BATLedgerDatabase removeAllPendingContributions:^(BOOL success) {
     callback(success ? ledger::Result::LEDGER_OK : ledger::Result::LEDGER_ERROR);
     if (success) {

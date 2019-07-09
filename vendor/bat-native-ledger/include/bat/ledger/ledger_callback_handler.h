@@ -9,8 +9,9 @@
 #include <string>
 
 #include "bat/ledger/export.h"
-
 namespace ledger {
+
+using InitializeCallback = std::function<void(int32_t)>;
 
 LEDGER_EXPORT enum Result {
   LEDGER_OK = 0,
@@ -48,11 +49,15 @@ class LEDGER_EXPORT LedgerCallbackHandler {
  public:
   virtual ~LedgerCallbackHandler() = default;
 
-  virtual void OnLedgerStateLoaded(Result result, const std::string& data) {}
+  virtual void OnLedgerStateLoaded(int32_t result,
+      const std::string& data,
+      InitializeCallback callback) {}
 
   virtual void OnLedgerStateSaved(Result result) {}
 
-  virtual void OnPublisherStateLoaded(Result result, const std::string& data) {}
+  virtual void OnPublisherStateLoaded(int32_t result,
+      const std::string& data,
+      InitializeCallback callback) {}
 
   virtual void OnPublisherStateSaved(Result result) {}
 

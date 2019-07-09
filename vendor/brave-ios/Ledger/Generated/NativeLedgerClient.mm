@@ -104,8 +104,8 @@ void NativeLedgerClient::OnRemoveRecurring(const std::string & publisher_key, le
 void NativeLedgerClient::OnRestorePublishers(ledger::OnRestoreCallback callback) {
   [bridge_ onRestorePublishers:callback];
 }
-void NativeLedgerClient::OnWalletInitialized(ledger::Result result) {
-  [bridge_ onWalletInitialized:result];
+void NativeLedgerClient::OnWalletInitialized(int32_t result) {
+  [bridge_ onWalletInitialized:static_cast<ledger::Result>(result)];
 }
 void NativeLedgerClient::OnWalletProperties(ledger::Result result, ledger::WalletPropertiesPtr arg1) {
   [bridge_ onWalletProperties:result arg1:std::move(arg1)];

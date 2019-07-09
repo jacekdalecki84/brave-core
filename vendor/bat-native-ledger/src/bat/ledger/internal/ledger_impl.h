@@ -72,8 +72,10 @@ class LedgerImpl : public ledger::Ledger,
   LedgerImpl& operator=(const LedgerImpl&) = delete;
 
   std::string GenerateGUID() const;
-  void Initialize() override;
-  bool CreateWallet() override;
+
+  void Initialize(ledger::InitializeCallback callback) override;
+
+  bool CreateWallet(ledger::CreateWalletCallback callback) override;
 
   void SetPublisherInfo(
       ledger::PublisherInfoPtr publisher_info);
@@ -186,7 +188,11 @@ class LedgerImpl : public ledger::Ledger,
 
   void LoadPublisherList(ledger::LedgerCallbackHandler* handler);
 
-  void OnWalletInitialized(ledger::Result result);
+  void OnWalletInitializedInternal(int32_t result,
+                                   ledger::InitializeCallback callback);
+
+  void OnWalletInitialized(int32_t result);
+
 
   void OnWalletProperties(ledger::Result result,
                           const braveledger_bat_helper::WALLET_PROPERTIES_ST&);
@@ -543,11 +549,13 @@ class LedgerImpl : public ledger::Ledger,
     ledger::PendingContributionInfoListCallback callback);
 
   // ledger::LedgerCallbacHandler implementation
-  void OnPublisherStateLoaded(ledger::Result result,
-                              const std::string& data) override;
+  void OnPublisherStateLoaded(int32_t result,
+                              const std::string& data,
+                              ledger::InitializeCallback callback) override;
 
-  void OnLedgerStateLoaded(ledger::Result result,
-                           const std::string& data) override;
+  void OnLedgerStateLoaded(int32_t result,
+                           const std::string& data,
+                              ledger::InitializeCallback callback) override;
 
   void RefreshPublishersList(bool retryAfterError, bool immediately = false);
 

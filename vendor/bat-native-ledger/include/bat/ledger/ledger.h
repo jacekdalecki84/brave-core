@@ -50,6 +50,9 @@ using GetAddressesCallback =
 using HasSufficientBalanceToReconcileCallback = std::function<void(bool)>;
 using FetchBalanceCallback = std::function<void(ledger::Result,
                                                 ledger::BalancePtr)>;
+using CreateWalletCallback = std::function<void(int32_t)>;
+
+using InitializeCallback = std::function<void(int32_t)>;
 
 class LEDGER_EXPORT Ledger {
  public:
@@ -66,10 +69,10 @@ class LEDGER_EXPORT Ledger {
 
   static Ledger* CreateInstance(LedgerClient* client);
 
-  virtual void Initialize() = 0;
+  virtual void Initialize(InitializeCallback) = 0;
 
   // returns false if wallet initialization is already in progress
-  virtual bool CreateWallet() = 0;
+  virtual bool CreateWallet(CreateWalletCallback callback) = 0;
 
   virtual void DoDirectTip(const std::string& publisher_id,
                            int amount,

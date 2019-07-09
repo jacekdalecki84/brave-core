@@ -182,15 +182,18 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
     Callback& get() { return callback_; }
 
     // ledger::LedgerCallbackHandler impl
-    void OnLedgerStateLoaded(ledger::Result result,
-        const std::string& data) override;
-    void OnPublisherStateLoaded(ledger::Result result,
-        const std::string& data) override;
+    void OnLedgerStateLoaded(int32_t result,
+        const std::string& data,
+        ledger::InitializeCallback callback) override;
+    void OnPublisherStateLoaded(int32_t result,
+        const std::string& data,
+        ledger::InitializeCallback callback) override;
     void OnPublisherListLoaded(ledger::Result result,
         const std::string& data) override;
     void OnLedgerStateSaved(ledger::Result result) override;
     void OnPublisherStateSaved(ledger::Result result) override;
     void OnPublishersListSaved(ledger::Result result) override;
+
    private:
     base::WeakPtr<LedgerClientMojoProxy> client_;
     Callback callback_;
@@ -203,12 +206,12 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
 
   static void OnLoadLedgerState(
     CallbackHolder<LoadLedgerStateCallback>* holder,
-    ledger::Result result,
+    int32_t result,
     const std::string& data);
 
   static void OnLoadPublisherState(
     CallbackHolder<LoadLedgerStateCallback>* holder,
-    ledger::Result result,
+    int32_t result,
     const std::string& data);
 
   static void OnLoadPublisherInfo(
@@ -274,7 +277,7 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
 
   static void OnLoadState(
       CallbackHolder<LoadStateCallback>* holder,
-      ledger::Result result,
+      int32_t result,
       const std::string& value);
 
   static void OnResetState(

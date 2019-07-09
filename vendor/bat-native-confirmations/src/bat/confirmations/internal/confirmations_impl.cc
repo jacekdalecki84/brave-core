@@ -691,7 +691,7 @@ void ConfirmationsImpl::LoadState() {
 }
 
 void ConfirmationsImpl::OnStateLoaded(
-    const Result result,
+    int32_t result,
     const std::string& json) {
   state_has_loaded_ = true;
 

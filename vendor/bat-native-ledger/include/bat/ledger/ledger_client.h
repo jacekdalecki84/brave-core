@@ -64,7 +64,7 @@ using LoadURLCallback = std::function<void(const int, const std::string&,
     const std::map<std::string, std::string>& headers)>;
 using OnRestoreCallback = std::function<void(bool)>;
 using OnSaveCallback = std::function<void(const ledger::Result)>;
-using OnLoadCallback = std::function<void(const ledger::Result,
+using OnLoadCallback = std::function<void(const int32_t,
                                           const std::string&)>;
 using OnResetCallback = std::function<void(const ledger::Result)>;
 using PendingContributionInfoListCallback =
@@ -81,7 +81,7 @@ class LEDGER_EXPORT LedgerClient {
   // called when the wallet creation has completed
   virtual std::string GenerateGUID() const = 0;
 
-  virtual void OnWalletInitialized(Result result) = 0;
+  virtual void OnWalletInitialized(int32_t result) = 0;
 
   virtual void OnWalletProperties(
       Result result,

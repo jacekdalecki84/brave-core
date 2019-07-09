@@ -40,7 +40,7 @@ class Wallet {
 
   ~Wallet();
 
-  void CreateWalletIfNecessary();
+  void CreateWalletIfNecessary(ledger::CreateWalletCallback callback);
 
   void RecoverWallet(const std::string& passPhrase);
 

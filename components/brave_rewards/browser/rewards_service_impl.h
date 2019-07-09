@@ -90,7 +90,7 @@ class RewardsServiceImpl : public RewardsService,
 
   void Init();
   void StartLedger();
-  void CreateWallet() override;
+  void CreateWallet(CreateWalletCallback callback) override;
   void FetchWalletProperties() override;
   void FetchGrants(const std::string& lang,
                    const std::string& paymentId) override;
@@ -111,6 +111,7 @@ class RewardsServiceImpl : public RewardsService,
       uint32_t min_visits,
       bool fetch_excluded,
       const GetContentSiteListCallback& callback) override;
+  void OnInitialize();
   void OnGetContentSiteList(
       const GetContentSiteListCallback& callback,
       ledger::PublisherInfoList list,
@@ -264,6 +265,8 @@ class RewardsServiceImpl : public RewardsService,
   FRIEND_TEST_ALL_PREFIXES(RewardsServiceTest, OnWalletProperties);
 
   const base::OneShotEvent& ready() const { return ready_; }
+  void OnCreateWallet(CreateWalletCallback callback,
+                      int32_t result);
   void OnLedgerStateSaved(ledger::LedgerCallbackHandler* handler,
                           bool success);
   void OnLedgerStateLoaded(ledger::OnLoadCallback callback,
@@ -405,7 +408,7 @@ class RewardsServiceImpl : public RewardsService,
 
   // ledger::LedgerClient
   std::string GenerateGUID() const override;
-  void OnWalletInitialized(ledger::Result result) override;
+  void OnWalletInitialized(int32_t result) override;
   void OnGrant(ledger::Result result,
                ledger::GrantPtr grant) override;
   void OnGrantCaptcha(const std::string& image,

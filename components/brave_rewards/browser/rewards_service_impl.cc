@@ -483,7 +483,13 @@ void RewardsServiceImpl::StartLedger() {
   bat_ledger_service_->Create(std::move(client_ptr_info),
       MakeRequest(&bat_ledger_));
 
-  bat_ledger_->Initialize();
+  auto callback = base::BindOnce(&RewardsServiceImpl::OnWalletInitialized,
+      AsWeakPtr());
+
+  bat_ledger_->Initialize(std::move(callback));
+}
+
+void RewardsServiceImpl::OnInitialize() {
 }
 
 void RewardsServiceImpl::MaybeShowBackupNotification(uint64_t boot_stamp) {
@@ -525,14 +531,25 @@ void RewardsServiceImpl::MaybeShowAddFundsNotification(
   }
 }
 
-void RewardsServiceImpl::CreateWallet() {
+void RewardsServiceImpl::OnCreateWallet(CreateWalletCallback callback,
+    int32_t result) {
+  OnWalletInitialized(result);
+  std::move(callback).Run(result);
+}
+
+void RewardsServiceImpl::CreateWallet(CreateWalletCallback callback) {
+  auto on_create = base::BindOnce(
+      &RewardsServiceImpl::OnCreateWallet,
+      AsWeakPtr(),
+      std::move(callback));
+
   if (ready().is_signaled()) {
     if (Connected())
-      bat_ledger_->CreateWallet();
+      bat_ledger_->CreateWallet(std::move(on_create));
   } else {
     ready().Post(FROM_HERE,
-        base::Bind(&brave_rewards::RewardsService::CreateWallet,
-            base::Unretained(this)));
+        base::BindOnce(&brave_rewards::RewardsService::CreateWallet,
+            base::Unretained(this), std::move(on_create)));
   }
 }
 
@@ -794,7 +811,7 @@ void RewardsServiceImpl::Shutdown() {
   RewardsService::Shutdown();
 }
 
-void RewardsServiceImpl::OnWalletInitialized(ledger::Result result) {
+void RewardsServiceImpl::OnWalletInitialized(int32_t result) {
   if (!ready_.is_signaled())
     ready_.Signal();
 
@@ -804,7 +821,7 @@ void RewardsServiceImpl::OnWalletInitialized(ledger::Result result) {
     StartNotificationTimers(true);
   }
 
-  TriggerOnWalletInitialized(result);
+  TriggerOnWalletInitialized(static_cast<ledger::Result>(result));
 }
 
 void RewardsServiceImpl::OnWalletProperties(

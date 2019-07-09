@@ -149,7 +149,7 @@ class ConfirmationsImpl : public Confirmations {
 
   bool state_has_loaded_;
   void LoadState();
-  void OnStateLoaded(const Result result, const std::string& json);
+  void OnStateLoaded(int32_t result, const std::string& json);
 
   void ResetState();
   void OnStateReset(const Result result);
