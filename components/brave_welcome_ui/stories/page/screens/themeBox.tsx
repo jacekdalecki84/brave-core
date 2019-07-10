@@ -5,13 +5,13 @@
 import * as React from 'react'
 
 // Feature-specific components
-import { Content, Title, Paragraph, PrimaryButton } from '../../../../../src/features/welcome/'
+import { Content, Title, Paragraph, PrimaryButton } from '../../../components'
 
 // Utils
 import locale from '../fakeLocale'
 
 // Images
-import { WelcomeThemeImage } from '../../../../../src/features/welcome/images'
+import { WelcomeThemeImage } from '../../../components/images'
 
 interface Props {
   index: number
