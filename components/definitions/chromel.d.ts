@@ -139,6 +139,7 @@ declare namespace chrome.braveTheme {
   type ThemeType = 'Light' | 'Dark'
   type ThemeTypeCallback = (themeType: ThemeType) => void
   const getBraveThemeType: (themeType: ThemeTypeCallback) => void
+  const setBraveThemeType: (themeType: ThemeTypeCallback) => {}
   const onBraveThemeTypeChanged: {
     addListener: (callback: ThemeTypeCallback) => void
   }
