@@ -4,6 +4,14 @@
 
 namespace profiles {
 
+void OpenBrowserWindowForTorProfile(
+    ProfileManager::CreateCallback callback,
+    bool always_create,
+    bool is_new_profile,
+    bool unblock_extensions,
+    Profile* profile,
+    Profile::CreateStatus status);
+
 #if !defined(OS_ANDROID)
 void SwitchToTorProfile(ProfileManager::CreateCallback callback) {
   const base::FilePath& path = BraveProfileManager::GetTorProfilePath();
@@ -12,7 +20,7 @@ void SwitchToTorProfile(ProfileManager::CreateCallback callback) {
   //                                  g_browser_process->profile_manager(),
   //                                  path);
   g_browser_process->profile_manager()->CreateProfileAsync(
-      path, base::Bind(&profiles::OpenBrowserWindowForProfile,
+      path, base::Bind(&profiles::OpenBrowserWindowForTorProfile,
                        callback, false, false, false),
       base::string16(), std::string());
 }
@@ -28,6 +36,18 @@ void CloseTorProfileWindows() {
         profile, base::Bind(&ProfileBrowserCloseSuccess),
         BrowserList::CloseCallback(), false);
   }
+}
+
+void OpenBrowserWindowForTorProfile(
+    ProfileManager::CreateCallback callback,
+    bool always_create,
+    bool is_new_profile,
+    bool unblock_extensions,
+    Profile* profile,
+    Profile::CreateStatus status) {
+  profiles::OpenBrowserWindowForProfile(
+      callback, always_create, is_new_profile, unblock_extensions,
+      profile->GetOffTheRecordProfile(), status);
 }
 
 }  // namespace profiles

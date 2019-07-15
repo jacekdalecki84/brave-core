@@ -1,0 +1,21 @@
+diff --git a/chrome/browser/profiles/profile_impl.h b/chrome/browser/profiles/profile_impl.h
+index 28315594f50c07150a1d29a5546cc7359a93cbb2..c9c4f3e6a6c23eb04efa41c13927a7b5be48b443 100644
+--- a/chrome/browser/profiles/profile_impl.h
++++ b/chrome/browser/profiles/profile_impl.h
+@@ -32,7 +32,7 @@
+ 
+ class MediaDeviceIDSalt;
+ class PrefService;
+-
++class ProfileManager;
+ #if defined(OS_CHROMEOS)
+ namespace chromeos {
+ class KioskTest;
+@@ -179,6 +179,7 @@ class ProfileImpl : public Profile {
+ #endif  // defined(OS_CHROMEOS)
+ 
+  private:
++  friend class ProfileManager;
+ #if defined(OS_CHROMEOS)
+   friend class chromeos::KioskTest;
+   friend class chromeos::SupervisedUserTestBase;

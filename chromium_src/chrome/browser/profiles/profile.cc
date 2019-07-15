@@ -8,11 +8,11 @@
 #include "brave/chromium_src/chrome/browser/profiles/profile.h"
 
 #include "brave/browser/tor/buildflags.h"
-#include "brave/common/tor/pref_names.h"
+#include "brave/common/tor/tor_constants.h"
 
 bool Profile::IsTorProfile() const {
 #if BUILDFLAG(ENABLE_TOR)
-  return GetPrefs()->GetBoolean(tor::prefs::kProfileUsingTor);
+  return GetPath().BaseName() == base::FilePath(tor::kTorProfileDir);
 #else
   return false;
 #endif

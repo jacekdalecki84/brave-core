@@ -1,8 +1,26 @@
 diff --git a/chrome/browser/profiles/profile_manager.cc b/chrome/browser/profiles/profile_manager.cc
-index 4cce9ca9fbf1ded2c4b8334f8ff9be0d43e97803..7b39473be45be8530eb91c1389c96aa65625a7d1 100644
+index 4cce9ca9fbf1ded2c4b8334f8ff9be0d43e97803..2fba2569ad0bcdc563a2c9ec917e54116af40d0d 100644
 --- a/chrome/browser/profiles/profile_manager.cc
 +++ b/chrome/browser/profiles/profile_manager.cc
-@@ -1503,9 +1503,11 @@ void ProfileManager::EnsureActiveProfileExistsBeforeDeletion(
+@@ -582,6 +582,7 @@ void ProfileManager::CreateProfileAsync(const base::FilePath& profile_path,
+   } else {
+     // Initiate asynchronous creation process.
+     info = RegisterProfile(CreateProfileAsyncHelper(profile_path, this), false);
++
+     size_t icon_index;
+     DCHECK(base::IsStringASCII(icon_url));
+     if (profiles::IsDefaultAvatarIconUrl(icon_url, &icon_index)) {
+@@ -611,6 +612,9 @@ void ProfileManager::CreateProfileAsync(const base::FilePath& profile_path,
+       info->callbacks.push_back(callback);
+     }
+   }
++  if (profile_path.BaseName() == base::FilePath("Tor Profile")) {  // TODO: Find a right place for triggering this
++    static_cast<ProfileImpl*>(info->profile.get())->OnPrefsLoaded(Profile::CREATE_MODE_ASYNCHRONOUS, true);
++  }
+ }
+ 
+ bool ProfileManager::IsValidProfile(const void* profile) {
+@@ -1503,9 +1507,11 @@ void ProfileManager::EnsureActiveProfileExistsBeforeDeletion(
    const base::FilePath last_used_profile_path =
        GetLastUsedProfileDir(user_data_dir_);
    const base::FilePath guest_profile_path = GetGuestProfilePath();
@@ -14,7 +32,7 @@ index 4cce9ca9fbf1ded2c4b8334f8ff9be0d43e97803..7b39473be45be8530eb91c1389c96aa6
        last_used_profile != nullptr &&
        !last_used_profile->IsLegacySupervised()) {
      FinishDeletingProfile(profile_dir, last_used_profile_path);
-@@ -1518,6 +1520,7 @@ void ProfileManager::EnsureActiveProfileExistsBeforeDeletion(
+@@ -1518,6 +1524,7 @@ void ProfileManager::EnsureActiveProfileExistsBeforeDeletion(
      base::FilePath cur_path = profile->GetPath();
      if (cur_path != profile_dir &&
          cur_path != guest_profile_path &&
@@ -22,7 +40,7 @@ index 4cce9ca9fbf1ded2c4b8334f8ff9be0d43e97803..7b39473be45be8530eb91c1389c96aa6
          !profile->IsLegacySupervised() &&
          !IsProfileDirectoryMarkedForDeletion(cur_path)) {
        OnNewActiveProfileLoaded(profile_dir, cur_path, std::move(callback),
-@@ -1537,6 +1540,7 @@ void ProfileManager::EnsureActiveProfileExistsBeforeDeletion(
+@@ -1537,6 +1544,7 @@ void ProfileManager::EnsureActiveProfileExistsBeforeDeletion(
      // legacy-supervised.
      if (cur_path != profile_dir &&
          cur_path != guest_profile_path &&
@@ -30,7 +48,7 @@ index 4cce9ca9fbf1ded2c4b8334f8ff9be0d43e97803..7b39473be45be8530eb91c1389c96aa6
          !entry->IsLegacySupervised() &&
          !IsProfileDirectoryMarkedForDeletion(cur_path)) {
        fallback_profile_path = cur_path;
-@@ -1894,6 +1898,7 @@ void ProfileManager::ScheduleForcedEphemeralProfileForDeletion(
+@@ -1894,6 +1902,7 @@ void ProfileManager::ScheduleForcedEphemeralProfileForDeletion(
      base::FilePath entry_path = entry->GetPath();
      if (entry_path == profile_dir ||
          entry_path == GetGuestProfilePath() ||

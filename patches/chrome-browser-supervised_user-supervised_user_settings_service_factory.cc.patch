@@ -1,0 +1,23 @@
+diff --git a/chrome/browser/supervised_user/supervised_user_settings_service_factory.cc b/chrome/browser/supervised_user/supervised_user_settings_service_factory.cc
+index 8e14e82750b168dfd296d5d25ab9b1c2470d6fc1..e225b5b1dec11ca142a392b4fda40e1844221e82 100644
+--- a/chrome/browser/supervised_user/supervised_user_settings_service_factory.cc
++++ b/chrome/browser/supervised_user/supervised_user_settings_service_factory.cc
+@@ -4,6 +4,8 @@
+ 
+ #include "chrome/browser/supervised_user/supervised_user_settings_service_factory.h"
+ 
++#include "chrome/browser/browser_process.h"
++#include "chrome/browser/profiles/profile_manager.h"
+ #include "chrome/browser/profiles/profile_key.h"
+ #include "chrome/browser/supervised_user/supervised_user_settings_service.h"
+ #include "components/keyed_service/core/simple_dependency_manager.h"
+@@ -36,6 +38,9 @@ SupervisedUserSettingsServiceFactory::BuildServiceInstanceFor(
+ 
+ SimpleFactoryKey* SupervisedUserSettingsServiceFactory::GetKeyToUse(
+     SimpleFactoryKey* key) const {
++  if (key->GetPath().BaseName() == base::FilePath("Tor Profile")) {
++    return g_browser_process->profile_manager()->GetProfileByPath(key->GetPath().DirName().DirName())->GetProfileKey();
++  }
+   ProfileKey* profile_key = ProfileKey::FromSimpleFactoryKey(key);
+   if (profile_key->IsOffTheRecord())
+     return profile_key->GetOriginalKey();

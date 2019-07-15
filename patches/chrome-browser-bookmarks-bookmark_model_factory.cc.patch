@@ -1,0 +1,28 @@
+diff --git a/chrome/browser/bookmarks/bookmark_model_factory.cc b/chrome/browser/bookmarks/bookmark_model_factory.cc
+index e54ad07d10fef4824e1b8cebd64a12059d2a5c5c..d6f3aa1080e1d69153c6b919889cc86ca7be9dea 100644
+--- a/chrome/browser/bookmarks/bookmark_model_factory.cc
++++ b/chrome/browser/bookmarks/bookmark_model_factory.cc
+@@ -13,7 +13,9 @@
+ #include "chrome/browser/bookmarks/chrome_bookmark_client.h"
+ #include "chrome/browser/bookmarks/managed_bookmark_service_factory.h"
+ #include "chrome/browser/bookmarks/startup_task_runner_service_factory.h"
++#include "chrome/browser/browser_process.h"
+ #include "chrome/browser/profiles/incognito_helpers.h"
++#include "chrome/browser/profiles/profile_manager.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/sync/bookmark_sync_service_factory.h"
+ #include "chrome/browser/ui/webui/bookmarks/bookmarks_ui.h"
+@@ -87,6 +89,13 @@ void BookmarkModelFactory::RegisterProfilePrefs(
+ 
+ content::BrowserContext* BookmarkModelFactory::GetBrowserContextToUse(
+     content::BrowserContext* context) const {
++  if (context->IsTorProfile()) {
++    LOG(ERROR) << __FUNCTION__ << "Tapping back to original profile";
++    ProfileManager* profile_manager = g_browser_process->profile_manager();
++    base::FilePath original_profile_path = Profile::FromBrowserContext(context)->GetPath().DirName().DirName();
++    Profile* original_profile = profile_manager->GetProfileByPath(original_profile_path);
++    return original_profile;
++  }
+   return chrome::GetBrowserContextRedirectedInIncognito(context);
+ }
+ 
