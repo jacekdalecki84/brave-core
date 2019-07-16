@@ -201,7 +201,8 @@ class LedgerImpl : public ledger::Ledger,
                const braveledger_bat_helper::GRANT& grant);
 
   void GetGrantCaptcha(
-      const std::vector<std::string>& headers) const override;
+      const std::vector<std::string>& headers,
+      ledger::GetGrantCaptchaCallback callback) const override;
 
   void OnGrantCaptcha(const std::string& image, const std::string& hint);
 

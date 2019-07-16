@@ -184,9 +184,25 @@ void BatLedgerImpl::FetchGrants(const std::string& lang,
   ledger_->FetchGrants(lang, payment_id);
 }
 
+
+// static
+void BatLedgerImpl::OnGetGrantCaptcha(
+    CallbackHolder<GetGrantCaptchaCallback>* holder,
+    std::string image,
+    std::string hint) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(image, hint);
+  delete holder;
+}
+
 void BatLedgerImpl::GetGrantCaptcha(
-    const std::vector<std::string>& headers) {
-  ledger_->GetGrantCaptcha(headers);
+    const std::vector<std::string>& headers,
+    GetGrantCaptchaCallback callback) {
+  // deleted in OnGetGrantCaptcha
+  auto* holder = new CallbackHolder<GetGrantCaptchaCallback>(
+      AsWeakPtr(), std::move(callback));
+  ledger_->GetGrantCaptcha(headers,
+      std::bind(BatLedgerImpl::OnGetGrantCaptcha, holder, _1, _2));
 }
 
 void BatLedgerImpl::GetWalletPassphrase(GetWalletPassphraseCallback callback) {

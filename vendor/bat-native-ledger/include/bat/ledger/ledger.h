@@ -50,6 +50,8 @@ using GetAddressesCallback =
 using HasSufficientBalanceToReconcileCallback = std::function<void(bool)>;
 using FetchBalanceCallback = std::function<void(ledger::Result,
                                                 ledger::BalancePtr)>;
+using GetGrantCaptchaCallback = std::function<void(std::string,
+                                                   std::string)>;
 
 class LEDGER_EXPORT Ledger {
  public:
@@ -171,7 +173,8 @@ class LEDGER_EXPORT Ledger {
                                  const std::string& promotionId) const = 0;
 
   virtual void GetGrantCaptcha(
-      const std::vector<std::string>& headers) const = 0;
+      const std::vector<std::string>& headers,
+      GetGrantCaptchaCallback callback) const = 0;
 
   virtual std::string GetWalletPassphrase() const = 0;
 

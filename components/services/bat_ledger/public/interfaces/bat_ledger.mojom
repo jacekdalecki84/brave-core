@@ -63,7 +63,7 @@ interface BatLedger {
       int32 month, int32 year, uint32 data);
 
   FetchGrants(string lang, string payment_id);
-  GetGrantCaptcha(array<string> headers);
+  GetGrantCaptcha(array<string> headers) =>(string image, string hint);
   GetWalletPassphrase() => (string wallet_passphrase);
   RecoverWallet(string passPhrase);
   SolveGrantCaptcha(string solution, string promotionId);

@@ -733,8 +733,9 @@ void LedgerImpl::OnGrant(ledger::Result result,
 }
 
 void LedgerImpl::GetGrantCaptcha(
-    const std::vector<std::string>& headers) const {
-  bat_grants_->GetGrantCaptcha(headers);
+    const std::vector<std::string>& headers,
+    ledger::GetGrantCaptchaCallback callback) const {
+  bat_grants_->GetGrantCaptcha(headers, std::move(callback));
 }
 
 void LedgerImpl::OnGrantCaptcha(const std::string& image,
