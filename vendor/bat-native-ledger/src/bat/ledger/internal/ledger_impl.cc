@@ -717,8 +717,9 @@ void LedgerImpl::FetchWalletProperties(
 }
 
 void LedgerImpl::FetchGrants(const std::string& lang,
-                             const std::string& payment_id) const {
-  bat_grants_->GetGrants(lang, payment_id);
+                             const std::string& payment_id,
+                             ledger::FetchGrantsCallback callback) const {
+  bat_grants_->FetchGrants(lang, payment_id, callback);
 }
 
 void LedgerImpl::OnGrant(ledger::Result result,
@@ -902,7 +903,7 @@ void LedgerImpl::OnTimer(uint32_t timer_id) {
 
   } else if (timer_id == last_grant_check_timer_id_) {
     last_grant_check_timer_id_ = 0;
-    FetchGrants(std::string(), std::string());
+    FetchGrants(std::string(), std::string(), [](ledger::Result _){});
   }
 
   bat_contribution_->OnTimer(timer_id);

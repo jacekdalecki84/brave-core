@@ -276,6 +276,7 @@ class RewardsServiceImpl : public RewardsService,
   void TriggerOnWalletInitialized(ledger::Result result);
   void OnFetchWalletProperties(int result,
                                ledger::WalletPropertiesPtr properties);
+  void OnFetchGrants(int result);
   void TriggerOnGrant(ledger::Result result, ledger::GrantPtr grant);
   void TriggerOnGrantCaptcha(const std::string& image, const std::string& hint);
   void TriggerOnRecoverWallet(ledger::Result result,

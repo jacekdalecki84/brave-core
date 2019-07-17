@@ -1366,13 +1366,18 @@ void RewardsServiceImpl::FetchWalletProperties() {
   }
 }
 
+void RewardsServiceImpl::OnFetchGrants(int result) {
+}
+
 void RewardsServiceImpl::FetchGrants(const std::string& lang,
     const std::string& payment_id) {
   if (!Connected()) {
     return;
   }
 
-  bat_ledger_->FetchGrants(lang, payment_id);
+  bat_ledger_->FetchGrants(lang, payment_id, base::BindOnce(
+      &RewardsServiceImpl::OnFetchGrants,
+      AsWeakPtr()));
 }
 
 void RewardsServiceImpl::TriggerOnGrant(ledger::Result result,

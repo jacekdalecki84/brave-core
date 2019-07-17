@@ -28,13 +28,15 @@ Grants::Grants(bat_ledger::LedgerImpl* ledger) :
 Grants::~Grants() {
 }
 
-void Grants::GetGrants(const std::string& lang,
-                       const std::string& forPaymentId) {
+void Grants::FetchGrants(const std::string& lang,
+                         const std::string& forPaymentId,
+                         ledger::FetchGrantsCallback callback) {
   // make sure wallet/client state is sane here as this is the first
   // panel call.
   const std::string& wallet_payment_id = ledger_->GetPaymentId();
   const std::string& passphrase = ledger_->GetWalletPassphrase();
   if (wallet_payment_id.empty() || passphrase.empty()) {
+    callback(ledger::Result::CORRUPTED_WALLET);
     braveledger_bat_helper::WALLET_PROPERTIES_ST properties;
     ledger_->OnWalletProperties(ledger::Result::CORRUPTED_WALLET, properties);
     return;
@@ -57,16 +59,26 @@ void Grants::GetGrants(const std::string& lang,
     }
   }
 
-  auto callback = std::bind(&Grants::GetGrantsCallback, this, _1, _2, _3);
-  ledger_->LoadURL(braveledger_bat_helper::buildURL(
-        (std::string)GET_SET_PROMOTION + arguments, PREFIX_V4),
-      std::vector<std::string>(), "", "", ledger::URL_METHOD::GET, callback);
+  auto internal_callback = std::bind(
+      &Grants::GetGrantsCallback,
+      this,
+      _1, _2, _3,
+      std::move(callback));
+  ledger_->LoadURL(
+      braveledger_bat_helper::buildURL(
+          (std::string)GET_SET_PROMOTION + arguments, PREFIX_V4),
+      std::vector<std::string>(),
+      "",
+      "",
+      ledger::URL_METHOD::GET,
+      internal_callback);
 }
 
 void Grants::GetGrantsCallback(
     int response_status_code,
     const std::string& response,
-    const std::map<std::string, std::string>& headers) {
+    const std::map<std::string, std::string>& headers,
+    ledger::FetchGrantsCallback callback) {
   braveledger_bat_helper::GRANT properties;
   braveledger_bat_helper::Grants grants;
   braveledger_bat_helper::GRANTS_PROPERTIES_ST grants_properties;
@@ -79,12 +91,14 @@ void Grants::GetGrantsCallback(
                                                                   &statusCode,
                                                                   &error);
   if (hasResponseError && statusCode == net::HTTP_NOT_FOUND) {
+    callback(ledger::Result::GRANT_NOT_FOUND);
     ledger_->SetLastGrantLoadTimestamp(time(0));
     ledger_->OnGrant(ledger::Result::GRANT_NOT_FOUND, properties);
     return;
   }
 
   if (response_status_code != net::HTTP_OK) {
+    callback(ledger::Result::LEDGER_ERROR);
     ledger_->OnGrant(ledger::Result::LEDGER_ERROR, properties);
     return;
   }
@@ -94,6 +108,7 @@ void Grants::GetGrantsCallback(
   if (!ok) {
      BLOG(ledger_, ledger::LogLevel::LOG_ERROR) <<
        "Failed to load grant properties state";
+    callback(ledger::Result::LEDGER_ERROR);
     ledger_->OnGrant(ledger::Result::LEDGER_ERROR, properties);
     return;
   }
@@ -107,6 +122,7 @@ void Grants::GetGrantsCallback(
     ledger_->OnGrant(ledger::Result::LEDGER_OK, grant_);
   }
 
+  callback(ledger::Result::LEDGER_OK);
   ledger_->SetLastGrantLoadTimestamp(time(0));
   ledger_->SetGrants(grants);
 }

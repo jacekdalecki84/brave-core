@@ -528,7 +528,10 @@ BATLedgerReadonlyBridge(double, defaultContributionAmount, GetDefaultContributio
   //  - OnGrant (GRANT_NOT_FOUND, LEDGER_ERROR, LEDGER_OK)
   // Calls `OnGrant` for each grant found (...)
   ledger->FetchGrants(std::string(language.UTF8String),
-                      std::string(paymentId.UTF8String));
+                      std::string(paymentId.UTF8String),
+                      ^(ledger::Result result){
+    // handle this?
+  });
 }
 
 - (void)onGrant:(ledger::Result)result grant:(ledger::GrantPtr)grant
@@ -577,7 +580,9 @@ BATLedgerReadonlyBridge(double, defaultContributionAmount, GetDefaultContributio
 
 - (void)fetchGrants:(const std::string &)lang paymentId:(const std::string &)paymentId
 {
-  ledger->FetchGrants(lang, paymentId);
+  ledger->FetchGrants(lang, paymentId, ^(ledger::Result result){
+    // handle this?
+  });
 }
 
 - (void)solveGrantCaptchWithPromotionId:(NSString *)promotionId solution:(NSString *)solution

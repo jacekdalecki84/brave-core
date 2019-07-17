@@ -62,7 +62,7 @@ interface BatLedger {
   OnReconcileCompleteSuccess(string viewing_id, int32 category, string probi,
       int32 month, int32 year, uint32 data);
 
-  FetchGrants(string lang, string payment_id);
+  FetchGrants(string lang, string payment_id) => (int32 result);
   GetGrantCaptcha(array<string> headers);
   GetWalletPassphrase() => (string wallet_passphrase);
   RecoverWallet(string passPhrase);
