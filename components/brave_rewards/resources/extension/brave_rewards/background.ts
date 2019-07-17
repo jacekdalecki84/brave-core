@@ -19,6 +19,14 @@ const iconOn = {
   }
 }
 
+const twitterAuthHeaders = {}
+
+const twitterAuthHeaderNames = [
+  'authorization',
+  'x-csrf-token',
+  'x-guest-token'
+]
+
 chrome.browserAction.setBadgeBackgroundColor({ color: '#FB542B' })
 chrome.browserAction.setIcon(iconOn)
 
@@ -114,6 +122,10 @@ const tipRedditUser = (redditMetaData: RewardsTip.RedditMetaData) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const action = typeof msg === 'string' ? msg : msg.type
   switch (action) {
+    case 'getTwitterAPICredentials': {
+      sendResponse(twitterAuthHeaders)
+      return false
+    }
     case 'tipTwitterUser': {
       tipTwitterUser(msg.tweetMetaData)
       return false
@@ -142,3 +154,25 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return false
   }
 })
+
+chrome.webRequest.onSendHeaders.addListener(
+  // Listener
+  function ({ requestHeaders }) {
+    if (requestHeaders) {
+      for (const header of requestHeaders) {
+        if (twitterAuthHeaderNames.includes(header.name) || header.name.startsWith('x-twitter-')) {
+          twitterAuthHeaders[header.name] = header.value
+        }
+      }
+    }
+  },
+  // Filters
+  {
+    urls: [
+      'https://api.twitter.com/1.1/*'
+    ]
+  },
+  // Extra
+  [
+    'requestHeaders'
+  ])
