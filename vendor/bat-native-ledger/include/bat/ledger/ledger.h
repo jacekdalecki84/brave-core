@@ -50,6 +50,7 @@ using GetAddressesCallback =
 using HasSufficientBalanceToReconcileCallback = std::function<void(bool)>;
 using FetchBalanceCallback = std::function<void(ledger::Result,
                                                 ledger::BalancePtr)>;
+using DoDirectTipCallback = std::function<void(ledger::Result)>;
 
 class LEDGER_EXPORT Ledger {
  public:
@@ -73,7 +74,8 @@ class LEDGER_EXPORT Ledger {
 
   virtual void DoDirectTip(const std::string& publisher_id,
                            int amount,
-                           const std::string& currency) = 0;
+                           const std::string& currency,
+                           ledger::DoDirectTipCallback callback) = 0;
 
   virtual void OnLoad(VisitDataPtr visit_data,
                       const uint64_t& current_time) = 0;

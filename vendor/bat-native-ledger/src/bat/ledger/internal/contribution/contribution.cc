@@ -197,7 +197,7 @@ ledger::PublisherInfoList Contribution::GetVerifiedListAuto(
   }
 
   if (non_verified.size() > 0) {
-    ledger_->SaveUnverifiedContribution(std::move(non_verified));
+    ledger_->SaveUnverifiedContribution(std::move(non_verified), [](bool _){});
   }
 
   *budget = ac_amount - non_verified_bat;
@@ -232,7 +232,7 @@ ledger::PublisherInfoList Contribution::GetVerifiedListRecurring(
   }
 
   if (non_verified.size() > 0) {
-    ledger_->SaveUnverifiedContribution(std::move(non_verified));
+    ledger_->SaveUnverifiedContribution(std::move(non_verified), [](bool _){});
   }
 
   return verified;

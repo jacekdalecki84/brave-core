@@ -498,7 +498,9 @@ BATLedgerReadonlyBridge(double, defaultContributionAmount, GetDefaultContributio
 
 - (void)tipPublisherDirectly:(BATPublisherInfo *)publisher amount:(int)amount currency:(NSString *)currency
 {
-  ledger->DoDirectTip(std::string(publisher.id.UTF8String), amount, std::string(currency.UTF8String));
+  ledger->DoDirectTip(std::string(publisher.id.UTF8String), amount, std::string(currency.UTF8String), ^(ledger::Result result) {
+    // handle result?
+  });
 }
 
 #pragma mark - Grants
@@ -1557,13 +1559,14 @@ BATLedgerBridge(BOOL,
   }];
 }
 
-- (void)savePendingContribution:(ledger::PendingContributionList)list
+- (void)savePendingContribution:(ledger::PendingContributionList)list callback:(ledger::SavePendingContributionCallback)callback
 {
   const auto list_ = NSArrayFromVector(&list, ^BATPendingContribution *(const ledger::PendingContributionPtr& info) {
     return [[BATPendingContribution alloc] initWithPendingContribution:*info];
   });
   [BATLedgerDatabase insertPendingContributions:list_ completion:^(BOOL success) {
     if (!success) {
+      callback(ledger::Result::LEDGER_ERROR);
       return;
     }
     for (BATBraveLedgerObserver *observer in self.observers) {
@@ -1573,6 +1576,7 @@ BATLedgerBridge(BOOL,
         }
       }
     }
+    callback(ledger::Result::LEDGER_OK);
   }];
 }
 
