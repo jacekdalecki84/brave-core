@@ -5,7 +5,7 @@
 import * as React from 'react'
 
 // Feature-specific components
-import { Content, Title, Paragraph, PrimaryButton } from 'brave-ui/features/welcome'
+import { Content, Title, Paragraph, PrimaryButton, SelectGrid, SelectBox } from 'brave-ui/features/welcome'
 
 // Images
 import { WelcomeThemeImage } from 'brave-ui/features/welcome/images'
@@ -17,9 +17,15 @@ interface Props {
   index: number
   currentScreen: number
   onClick: () => void
+  changeTheme: () => void
+  browserThemes: Array<Welcome.BrowserTheme>
 }
 
 export default class ThemingBox extends React.PureComponent<Props, {}> {
+
+  showSystemThemeOption = (browserThemes: Array<Welcome.BrowserTheme>) =>
+    browserThemes.length === 3
+
   render () {
     const { index, currentScreen, onClick } = this.props
     return (

@@ -24,7 +24,8 @@ describe('welcomeReducer', () => {
       const assertion = welcomeReducer(undefined, actions.closeTabRequested())
       expect(assertion).toEqual({
         searchProviders: [],
-        browserProfiles: []
+        browserProfiles: [],
+        browserThemes: []
       })
       expect(spy).toBeCalled()
       expect(spy.mock.calls[0][1]).toBe(undefined)
@@ -108,7 +109,8 @@ describe('welcomeReducer', () => {
     it('should set default search provider data', () => {
       const mockState = {
         searchProviders: [],
-        browserProfiles: []
+        browserProfiles: [],
+        browserThemes: []
       }
       const result = welcomeReducer(mockState, {
         type: types.IMPORT_DEFAULT_SEARCH_PROVIDERS_SUCCESS,
@@ -126,7 +128,8 @@ describe('welcomeReducer', () => {
     it('should set import browser profile data', () => {
       const mockState = {
         searchProviders: [],
-        browserProfiles: []
+        browserProfiles: [],
+        browserThemes: []
       }
       const result = welcomeReducer(mockState, {
         type: types.IMPORT_BROWSER_PROFILES_SUCCESS,

@@ -53,4 +53,19 @@ describe('welcome_actions', () => {
       payload: mockPayload
     })
   })
+
+  it('getBrowserThemesSuccess', () => {
+    const mockPayload = []
+    expect(actions.getSearchEngineProvidersSuccess(mockPayload)).toEqual({
+      type: types.IMPORT_BROWSER_THEMES_SUCCESS,
+      payload: mockPayload
+    })
+  })
+
+  it('setBrowserThemes', () => {
+    expect(actions.setBrowserThemes('Dark')).toEqual({
+      type: types.CHANGE_DEFAULT_SEARCH_PROVIDER,
+      payload: 'Dark'
+    })
+  })
 })

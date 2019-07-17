@@ -3,7 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Dispatch } from 'redux'
-import { getSearchEngineProvidersSuccess, getBrowserProfilesSuccess } from './actions/welcome_actions'
+import {
+  getSearchEngineProvidersSuccess,
+  getBrowserProfilesSuccess,
+  getBrowserThemesSuccess
+} from './actions/welcome_actions'
 import { State as ImportBoxState } from '../brave_welcome_ui/components/screens/importBox'
 
 // Search box
@@ -38,6 +42,9 @@ export const getBrowserProfiles = () => {
         const filteredProfiles = getValidBrowserProfiles(response)
         dispatch(getBrowserProfilesSuccess(filteredProfiles))
       })
+      .catch((error: any) => {
+        console.error('Could not load browser profile', error)
+      })
   }
 }
 
@@ -53,3 +60,17 @@ export const getSourceBrowserProfileIndex = (state: ImportBoxState): number => {
 
 export const isValidBrowserProfiles = (browserProfiles: Array<Welcome.BrowserProfile>) =>
   browserProfiles && Array.isArray(browserProfiles) && browserProfiles.length > 0
+
+// Theme box
+
+export const getBrowserThemes = () => {
+  return (dispatch: Dispatch) => {
+    new Promise(resolve => chrome.braveTheme.getBraveThemeList(resolve))
+      .then((response: Array<Welcome.BrowserTheme>) => {
+        dispatch(getBrowserThemesSuccess(response))
+      })
+      .catch((error: any) => {
+        console.error('Could not load browser themes', error)
+      })
+  }
+}
