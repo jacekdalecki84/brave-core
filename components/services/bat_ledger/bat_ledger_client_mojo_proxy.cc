@@ -826,4 +826,27 @@ void BatLedgerClientMojoProxy::GetAllTransactions(
       base::BindOnce(&OnGetAllTransactions, std::move(callback)));
 }
 
+void OnGetStatementOneTimeTips(
+    const ledger::StatementsOneTimeTipsCallback& callback,
+    int32_t result,
+    ledger::ContributionInfoList list) {
+  callback(ToLedgerResult(result), std::move(list));
+}
+
+void BatLedgerClientMojoProxy::GetStatementOneTimeTips(
+    int32_t month,
+    uint32_t year,
+    ledger::StatementsOneTimeTipsCallback callback) {
+  if (!Connected()) {
+    ledger::ContributionInfoList list;
+    callback(ledger::Result::LEDGER_ERROR, std::move(list));
+    return;
+  }
+
+  bat_ledger_client_->GetStatementOneTimeTips(
+      month,
+      year,
+      base::BindOnce(&OnGetStatementOneTimeTips, std::move(callback)));
+}
+
 }  // namespace bat_ledger

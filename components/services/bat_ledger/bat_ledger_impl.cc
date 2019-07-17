@@ -703,4 +703,26 @@ void BatLedgerImpl::GetAllTransactions(
         ToLedgerPublisherMonth(month), year);
 }
 
+void BatLedgerImpl::OnGetStatementOneTimeTips(
+    CallbackHolder<GetStatementOneTimeTipsCallback>* holder,
+    ledger::ContributionInfoList contributions) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(std::move(contributions));
+  delete holder;
+}
+
+void BatLedgerImpl::GetStatementOneTimeTips(
+    int32_t month,
+    uint32_t year,
+    GetStatementOneTimeTipsCallback callback) {
+  auto* holder = new CallbackHolder<GetStatementOneTimeTipsCallback>(
+      AsWeakPtr(), std::move(callback));
+
+  ledger_->GetOneTimeTipsStatements(
+    std::bind(
+      BatLedgerImpl::OnGetStatementOneTimeTips, holder, _1),
+        ToLedgerPublisherMonth(month), year);
+}
+
+
 }  // namespace bat_ledger

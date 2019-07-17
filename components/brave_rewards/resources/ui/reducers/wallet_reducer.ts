@@ -305,6 +305,25 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
     case types.ON_GET_MONTHLY_STATEMENTS: {
       state = { ...state }
       state.monthlyStatement = action.payload.monthlyStatement
+      break
+    }
+    case types.ADD_ONE_TIME_TIP_CONTRIBUTION: {
+      state = { ...state }
+
+      if (!state.monthlyOneTimeTips) {
+        state.monthlyOneTimeTips = []
+      }
+      console.log('contribution in reducer: ' + JSON.stringify(action.payload.contribution))
+      console.log('publisher in reducer: ' + JSON.stringify(action.payload.publisher))
+      const monthlyTip = {
+        contribution: action.payload.contribution,
+        publisher: action.payload.publisher
+      }
+      console.log('temp tip: ' + JSON.stringify(monthlyTip))
+      state.monthlyOneTimeTips.push(monthlyTip)
+      console.log('tips in reducer after merge: ' + JSON.stringify(state.monthlyOneTimeTips))
+
+      break
     }
   }
 

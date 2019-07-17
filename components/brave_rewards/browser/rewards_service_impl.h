@@ -257,6 +257,15 @@ class RewardsServiceImpl : public RewardsService,
 
   void FetchBalance(FetchBalanceCallback callback) override;
 
+  void GetOneTimeTipsStatements(
+      int32_t month,
+      uint32_t year,
+      GetOneTimeTipsStatementsCallback callback) override;
+
+  void GetPublisherInfo(
+      const std::string& publisher_key,
+      GetPublisherInfoCallback callback) override;
+
   // Testing methods
   void SetLedgerEnvForTesting();
   void StartMonthlyContributionForTest();
@@ -587,13 +596,31 @@ class RewardsServiceImpl : public RewardsService,
       uint32_t year,
       ledger::TransactionListCallback callback) override;
 
+  void GetStatementOneTimeTips(
+      int32_t month,
+      uint32_t year,
+      ledger::StatementsOneTimeTipsCallback callback) override;
+
   void OnGetAllTransactions(
       ledger::TransactionListCallback callback,
       ledger::mojom::AllTransactionsPtr transactions);
 
+  void OnGetStatementOneTimeTips(
+      ledger::StatementsOneTimeTipsCallback callback,
+      ledger::ContributionInfoList list);
+
   void OnGetMonthlyStatement(
       GetMonthlyStatementListCallback callback,
       ledger::mojom::MonthlyStatementsPtr monthly_statements);
+
+  void OnGetOneTimeTipsStatements(
+      GetOneTimeTipsStatementsCallback callback,
+      ledger::ContributionInfoList list);
+
+  void OnGetPublisherInfo(
+      GetPublisherInfoCallback callback,
+      uint32_t result,
+      ledger::PublisherInfoPtr publisher);
 
   bool Connected() const;
   void ConnectionClosed();

@@ -115,6 +115,11 @@ class PublisherInfoDatabase {
       int32_t month,
       uint32_t year);
 
+  void GetOneTimeTipsContributions(
+      ledger::ContributionInfoList* list,
+      int32_t month,
+      uint32_t year);
+
   // Vacuums the database. This will cause sqlite to defragment and collect
   // unused space in the file. It can be VERY SLOW.
   void Vacuum();

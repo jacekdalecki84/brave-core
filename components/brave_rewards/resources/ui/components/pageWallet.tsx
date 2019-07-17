@@ -487,6 +487,40 @@ class PageWallet extends React.Component<Props, State> {
     })
   }
 
+  getOneTimeTipRows = (rows: Rewards.MonthlyOneTimeTips[]): ContributeRows[] => {
+    const { balance } = this.props.rewardsData
+    return rows.map((item: Rewards.MonthlyOneTimeTips) => {
+      console.log('--------indevidual item: ' + JSON.stringify(item))
+      let faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.url}`
+      if (item.publisher.favIcon && item.publisher.verified) {
+        faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.favIcon}`
+      }
+      let tipMonth = ''
+      let tipDayOfMonth = ''
+      if (item.contribution.category === 8) {
+        let tipDate = new Date(parseInt(item.contribution.date, 10) * 1000)
+        tipMonth = tipDate.toLocaleString(navigator.language, { month: 'short' })
+        tipDayOfMonth = tipDate.getDate().toString()
+      }
+
+      const amountValue = utils.convertProbiToFixed(item.contribution.probi)
+      return {
+        profile: {
+          name: item.publisher.name,
+          verified: item.publisher.verified,
+          provider: (item.publisher.provider ? item.publisher.provider : undefined) as Provider,
+          src: faviconUrl
+        },
+        url: item.publisher.url,
+        token: {
+          value: amountValue,
+          converted: amountValue !== '0.0' ? utils.convertBalance(amountValue, balance.rates) : '0.00'
+        },
+        tipDate: tipMonth !== '' && tipDayOfMonth !== '' && item.contribution.category === 8 ? tipMonth + ' ' + tipDayOfMonth : ''
+      }
+    })
+  }
+
   getMonthlyStatementAutoContribute = (): ContributeRows[] => {
     const { monthlyStatement } = this.props.rewardsData
     const autoContribute = monthlyStatement.statementItems.filter((item: Rewards.StatementItem) => item.category === 2)
@@ -500,9 +534,9 @@ class PageWallet extends React.Component<Props, State> {
   }
 
   getMonthlyStatementTips = (): ContributeRows[] => {
-    const { monthlyStatement } = this.props.rewardsData
-    const tips = monthlyStatement.statementItems.filter((item: Rewards.StatementItem) => item.category === 8)
-    return this.getRows(tips)
+    const { monthlyOneTimeTips } = this.props.rewardsData
+    console.log('========MONTHLY ONE TIME TIPS JSON: ' + JSON.stringify(monthlyOneTimeTips))
+    return this.getOneTimeTipRows(monthlyOneTimeTips)
   }
 
   getReconcileDayOfMonth = () => {

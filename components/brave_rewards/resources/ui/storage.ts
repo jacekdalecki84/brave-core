@@ -86,6 +86,7 @@ export const defaultState: Rewards.State = {
     reconcileStamp: '',
     transactions: []
   },
+  monthlyOneTimeTips: [],
   hasMonthlyStatement: false
 }
 

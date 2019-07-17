@@ -792,4 +792,29 @@ void LedgerClientMojoProxy::GetAllTransactions(
                 _2));
 }
 
+// static
+void LedgerClientMojoProxy::OnGetStatementOneTimeTips(
+    CallbackHolder<GetStatementOneTimeTipsCallback>* holder,
+    ledger::Result result,
+    ledger::ContributionInfoList list) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(result, std::move(list));
+}
+
+void LedgerClientMojoProxy::GetStatementOneTimeTips(
+    int32_t month,
+    uint32_t year,
+    GetStatementOneTimeTipsCallback callback) {
+  // deleted in OnGetStatementOneTimeTips
+  auto* holder = new CallbackHolder<GetStatementOneTimeTipsCallback>(
+      AsWeakPtr(), std::move(callback));
+  ledger_client_->GetStatementOneTimeTips(
+      month,
+      year,
+      std::bind(LedgerClientMojoProxy::OnGetStatementOneTimeTips,
+          holder,
+          _1,
+          _2));
+}
+
 }  // namespace bat_ledger

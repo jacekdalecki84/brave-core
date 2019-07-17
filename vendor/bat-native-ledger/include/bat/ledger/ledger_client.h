@@ -75,6 +75,8 @@ using GetCountryCodesCallback =
     std::function<void(const std::vector<int32_t>&)>;
 using TransactionListCallback =
     std::function<void(ledger::mojom::AllTransactionsPtr, uint32_t)>;
+using StatementsOneTimeTipsCallback =
+    std::function<void(ledger::Result, ledger::ContributionInfoList)>;
 
 class LEDGER_EXPORT LedgerClient {
  public:
@@ -253,6 +255,11 @@ class LEDGER_EXPORT LedgerClient {
       int32_t month,
       uint32_t year,
       ledger::TransactionListCallback callback) = 0;
+
+  virtual void GetStatementOneTimeTips(
+      int32_t month,
+      uint32_t year,
+      ledger::StatementsOneTimeTipsCallback callback) = 0;
 };
 
 }  // namespace ledger

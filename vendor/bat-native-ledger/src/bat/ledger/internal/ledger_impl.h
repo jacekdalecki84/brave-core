@@ -494,6 +494,11 @@ class LedgerImpl : public ledger::Ledger,
       ledger::ACTIVITY_MONTH month,
       uint32_t year) override;
 
+  void GetOneTimeTipsStatements(
+      const ledger::GetOneTimeTipsStatementsCallback& callback,
+      ledger::ACTIVITY_MONTH month,
+      uint32_t year) override;
+
  private:
   void OnLoad(ledger::VisitDataPtr visit_data,
               const uint64_t& current_time) override;
@@ -596,6 +601,11 @@ class LedgerImpl : public ledger::Ledger,
       ledger::ACTIVITY_MONTH month,
       uint32_t year,
       const ledger::MonthlyStatementCallback& callback);
+
+  void OnGetOneTimeTipsStatements(
+      ledger::Result result,
+      ledger::ContributionInfoList list,
+      ledger::GetOneTimeTipsStatementsCallback callback);
 
   ledger::mojom::MonthlyStatementsPtr ToMojoMonthlyStatements(
       ledger::mojom::AllTransactionsPtr list,

@@ -83,6 +83,7 @@ LEDGER_EXPORT struct ActivityInfoFilter {
 
 using ContributionInfo = mojom::ContributionInfo;
 using ContributionInfoPtr = mojom::ContributionInfoPtr;
+using ContributionInfoList = std::vector<ContributionInfoPtr>;
 
 }  // namespace ledger
 

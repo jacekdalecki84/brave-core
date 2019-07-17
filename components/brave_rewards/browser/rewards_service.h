@@ -16,6 +16,7 @@
 #include "brave/components/brave_rewards/browser/balance.h"
 #include "brave/components/brave_rewards/browser/balance_report.h"
 #include "brave/components/brave_rewards/browser/content_site.h"
+#include "brave/components/brave_rewards/browser/contribution_info.h"
 #include "brave/components/brave_rewards/browser/monthly_statement.h"
 #include "brave/components/brave_rewards/browser/publisher_banner.h"
 #include "brave/components/brave_rewards/browser/pending_contribution.h"
@@ -77,6 +78,8 @@ using GetOneTimeTipsCallback = base::OnceCallback<void(
     std::unique_ptr<brave_rewards::ContentSiteList>)>;
 using GetMonthlyStatementListCallback = base::OnceCallback<void(
     std::unique_ptr<MonthlyStatement>)>;
+using GetOneTimeTipsStatementsCallback = base::OnceCallback<void(
+    std::unique_ptr<brave_rewards::ContributionInfoList>)>;
 using GetPublisherBannerCallback =
     base::OnceCallback<void(std::unique_ptr<brave_rewards::PublisherBanner>)>;
 using RefreshPublisherCallback =
@@ -91,6 +94,8 @@ using GetCurrentCountryCallback = base::OnceCallback<void(const std::string&)>;
 using FetchBalanceCallback = base::OnceCallback<void(
     int32_t,
     std::unique_ptr<brave_rewards::Balance>)>;
+using GetPublisherInfoCallback =
+    base::OnceCallback<void(std::unique_ptr<brave_rewards::ContentSite>)>;
 
 class RewardsService : public KeyedService {
  public:
@@ -249,6 +254,15 @@ class RewardsService : public KeyedService {
       GetMonthlyStatementListCallback callback) = 0;
 
   virtual void FetchBalance(FetchBalanceCallback callback) = 0;
+
+  virtual void GetOneTimeTipsStatements(
+      int32_t month,
+      uint32_t year,
+      GetOneTimeTipsStatementsCallback callback) = 0;
+
+  virtual void GetPublisherInfo(
+      const std::string& publisher_key,
+      GetPublisherInfoCallback callback) = 0;
 
  protected:
   base::ObserverList<RewardsServiceObserver> observers_;

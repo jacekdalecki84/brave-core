@@ -4,10 +4,10 @@
 module ledger.mojom;
 
 struct ContributionInfo {
-  string publisher;
   double value;
   uint64 date;
   uint32 category;
+  string publisher_key;
 };
 
 struct PublisherInfo {

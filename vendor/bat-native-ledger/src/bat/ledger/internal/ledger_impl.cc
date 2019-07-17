@@ -1684,9 +1684,9 @@ void LedgerImpl::OnGetAllTransactions(
       transaction->category = 3;  // placeholder for grants on statement
       base::Time parsed_time;
       std::string time_str =
-          base::StringPrintf("%s/1/%s",
-            std::to_string(month).c_str(),
-            std::to_string(year).c_str());
+          base::StringPrintf("%u/1/%u",
+            month,
+            year);
       if (base::Time::FromString(
           time_str.c_str(), &parsed_time)) {
         transaction->date = parsed_time.ToDeltaSinceWindowsEpoch().InSeconds();
@@ -1700,9 +1700,9 @@ void LedgerImpl::OnGetAllTransactions(
       transaction->category = 5;  // placeholder for ads earnings on statement
       base::Time parsed_time;
       std::string time_str =
-          base::StringPrintf("%s/1/%s",
-            std::to_string(month).c_str(),
-            std::to_string(year).c_str());
+          base::StringPrintf("%u/1/%u",
+            month,
+            year);
       if (base::Time::FromString(
           time_str.c_str(), &parsed_time)) {
         transaction->date = parsed_time.ToDeltaSinceWindowsEpoch().InSeconds();
@@ -1754,6 +1754,29 @@ void LedgerImpl::GetAllTransactions(
                 month,
                 year,
                 callback));
+}
+
+void LedgerImpl::OnGetOneTimeTipsStatements(
+    ledger::Result result,
+    ledger::ContributionInfoList contributions,
+    ledger::GetOneTimeTipsStatementsCallback callback) {
+  if (result == ledger::Result::LEDGER_OK) {
+    callback(std::move(contributions));
+  }
+}
+
+void LedgerImpl::GetOneTimeTipsStatements(
+    const ledger::GetOneTimeTipsStatementsCallback& callback,
+    ledger::ACTIVITY_MONTH month,
+    uint32_t year) {
+  ledger_client_->GetStatementOneTimeTips(
+      month,
+      year,
+      std::bind(&LedgerImpl::OnGetOneTimeTipsStatements,
+              this,
+              _1,
+              _2,
+              callback));
 }
 
 void LedgerImpl::OnReportBalanceFetched(

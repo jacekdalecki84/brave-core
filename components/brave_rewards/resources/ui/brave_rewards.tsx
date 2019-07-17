@@ -177,6 +177,10 @@ window.cr.define('brave_rewards', function () {
     getActions().onGetMonthlyStatements(monthlyStatement)
   }
 
+  function onGetMonthlyOneTimeTips (monthlyOneTimeTips: Rewards.MonthlyOneTimeTips) {
+    getActions().onGetMonthlyOneTimeTips(monthlyOneTimeTips)
+  }
+
   function excludedSiteChanged () {
     getActions().getExcludedSites()
     getActions().getContributeList()
@@ -228,7 +232,8 @@ window.cr.define('brave_rewards', function () {
     excludedSiteChanged,
     balance,
     reconcileComplete,
-    onGetMonthlyStatements
+    onGetMonthlyStatements,
+    onGetMonthlyOneTimeTips
   }
 })
 

@@ -6,6 +6,7 @@
 #define BRAVE_BROWSER_PAYMENTS_CONTRIBUTION_INFO_
 
 #include <string>
+#include <vector>
 
 namespace brave_rewards {
   struct ContributionInfo {
@@ -14,12 +15,14 @@ namespace brave_rewards {
     ContributionInfo(const ContributionInfo& properties);
 
     std::string probi;
-    int month;
-    int year;
-    int category;
+    int32_t month;
+    uint32_t year;
+    int32_t category;
     uint32_t date = 0;
     std::string publisher_key;
   };
+
+  using ContributionInfoList = std::vector<ContributionInfo>;
 
 }  // namespace brave_rewards
 

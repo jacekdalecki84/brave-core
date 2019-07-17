@@ -140,7 +140,7 @@ class RewardsDOMHandler : public WebUIMessageHandler,
   void OnFetchBalance(
     int32_t result,
     std::unique_ptr<brave_rewards::Balance> balance);
-  void GetMonthlyStatements(const base::ListValue* args);
+  void GetOneTimeTipsStatements(const base::ListValue* args);
 
   // RewardsServiceObserver implementation
   void OnWalletInitialized(brave_rewards::RewardsService* rewards_service,
@@ -220,8 +220,15 @@ class RewardsDOMHandler : public WebUIMessageHandler,
       const brave_rewards::RewardsNotificationService::RewardsNotificationsList&
           notifications_list) override;
 
-  void OnGetMonthlyStatements(
-      std::unique_ptr<brave_rewards::MonthlyStatement> monthly_statement);
+  void OnGetOneTimeTipsStatements(
+      const std::string& webui_callback_id,
+      std::unique_ptr<brave_rewards::ContributionInfoList> contributions);
+
+  void GetPublisherInfo(const base::ListValue* args);
+
+  void OnGetPublisherInfo(
+      const std::string& webui_callback_id,
+      std::unique_ptr<brave_rewards::ContentSite> content_site);
 
   brave_rewards::RewardsService* rewards_service_;  // NOT OWNED
   brave_ads::AdsService* ads_service_;
@@ -347,8 +354,11 @@ void RewardsDOMHandler::RegisterMessages() {
   web_ui()->RegisterMessageCallback("brave_rewards.fetchBalance",
       base::BindRepeating(&RewardsDOMHandler::FetchBalance,
       base::Unretained(this)));
-  web_ui()->RegisterMessageCallback("brave_rewards.getMonthlyStatements",
-      base::BindRepeating(&RewardsDOMHandler::GetMonthlyStatements,
+  web_ui()->RegisterMessageCallback("brave_rewards.getOneTimeTipsStatements",
+      base::BindRepeating(&RewardsDOMHandler::GetOneTimeTipsStatements,
+      base::Unretained(this)));
+  web_ui()->RegisterMessageCallback("brave_rewards.getPublisherInfo",
+      base::BindRepeating(&RewardsDOMHandler::GetPublisherInfo,
       base::Unretained(this)));
 }
 
@@ -1306,82 +1316,81 @@ void RewardsDOMHandler::FetchBalance(const base::ListValue* args) {
   }
 }
 
-void RewardsDOMHandler::OnGetMonthlyStatements(
-    std::unique_ptr<brave_rewards::MonthlyStatement> monthly_statement) {
-  if (web_ui()->CanCallJavascript()) {
-    base::Value monthly(base::Value::Type::DICTIONARY);
-
-    base::Value statements(base::Value::Type::LIST);
-    for (const auto& item : monthly_statement->publishers) {
-      base::Value statement(base::Value::Type::DICTIONARY);
-      statement.SetStringKey("id", item.id);
-      statement.SetStringKey("publisherKey", item.id);
-      statement.SetStringKey("percentage", std::to_string(item.percentage));
-      statement.SetBoolKey("verified", item.verified);
-      statement.SetBoolKey("excluded", item.excluded);
-      statement.SetStringKey("name", item.name);
-      statement.SetStringKey("provider", item.provider);
-      statement.SetStringKey("url", item.url);
-      statement.SetStringKey("faviconUrl", item.favicon_url);
-      statement.SetStringKey("date", std::to_string(item.date));
-      statement.SetIntKey("category", item.category);
-      statement.SetStringKey("probi", std::to_string(item.probi));
-      statement.SetStringKey("reconcileStamp",
-          std::to_string(item.reconcile_stamp));
-      statements.GetList().push_back(std::move(statement));
-    }
-    monthly.SetKey("statementItems", base::Value(std::move(statements)));
-
-    base::Value transactions(base::Value::Type::LIST);
-    for (const auto& tx : monthly_statement->transactions) {
-      base::Value transaction(base::Value::Type::DICTIONARY);
-      transaction.SetStringKey("probi", tx.probi);
-      transaction.SetStringKey("date", std::to_string(tx.date));
-      transaction.SetIntKey("category", tx.category);
-      transactions.GetList().push_back(std::move(transaction));
-    }
-    monthly.SetKey("transactions", base::Value(std::move(transactions)));
-
-    base::Value report(base::Value::Type::DICTIONARY);
-    report.SetStringKey("opening", monthly_statement->report.opening_balance);
-    report.SetStringKey("closing", monthly_statement->report.closing_balance);
-    report.SetStringKey("grant", monthly_statement->report.grants);
-    report.SetStringKey("ads", monthly_statement->report.earning_from_ads);
-    report.SetStringKey("contribute",
-        monthly_statement->report.auto_contribute);
-    report.SetStringKey("donation",
-        monthly_statement->report.recurring_donation);
-    report.SetStringKey("tips", monthly_statement->report.one_time_donation);
-    report.SetStringKey("total", monthly_statement->report.total);
-    monthly.SetKey("balanceReport", base::Value(std::move(report)));
-
-    base::Value months(base::Value::Type::LIST);
-    for (const std::string& month : monthly_statement->months_available) {
-      months.GetList().push_back(base::Value(month));
-    }
-    monthly.SetKey("monthsAvailable", base::Value(std::move(months)));
-
-    monthly.SetStringKey("reconcileStamp",
-        std::to_string(monthly_statement->reconcile_stamp));
-
-    web_ui()->CallJavascriptFunctionUnsafe(
-         "brave_rewards.onGetMonthlyStatements",
-         std::move(monthly));
+void RewardsDOMHandler::OnGetOneTimeTipsStatements(
+    const std::string& webui_callback_id,
+    std::unique_ptr<brave_rewards::ContributionInfoList> list) {
+  LOG(ERROR) << "+++++++++IN ONGETONETIMETIPSSTATEMENTS";
+  AllowJavascript();
+  base::Value one_time_tips(base::Value::Type::LIST);
+  for (const auto& item : *list) {
+    base::Value tip(base::Value::Type::DICTIONARY);
+    LOG(ERROR) << "==========PUB KEY: " << item.publisher_key;
+    tip.SetStringKey("publisherKey", item.publisher_key);
+    tip.SetStringKey("probi", item.probi);
+    tip.SetStringKey("date", std::to_string(item.date));
+    tip.SetIntKey("category", item.category);
+    one_time_tips.GetList().push_back(std::move(tip));
   }
+
+  ResolveJavascriptCallback(
+      base::Value(webui_callback_id),
+      std::move(one_time_tips));
 }
 
-void RewardsDOMHandler::GetMonthlyStatements(const base::ListValue* args) {
-  CHECK_EQ(2U, args->GetSize());
+void RewardsDOMHandler::GetOneTimeTipsStatements(
+    const base::ListValue* args) {
+  LOG(ERROR) << "=========IN GETONETIMETIPSSTATEMENTS";
+  CHECK_EQ(3U, args->GetSize());
+  std::string webui_callback_id = args->GetList()[0].GetString();
   if (!rewards_service_) {
     return;
   }
-  int32_t month = args->GetList()[0].GetInt();
-  int32_t year = args->GetList()[1].GetInt();
-  rewards_service_->GetMonthlyStatements(
+  int32_t month = args->GetList()[1].GetInt();
+  int32_t year = args->GetList()[2].GetInt();
+  LOG(ERROR) << "=========IN GETONETIMETIPSSTATEMENTS";
+
+  rewards_service_->GetOneTimeTipsStatements(
       month,
       (uint32_t)year,
-      base::BindOnce(&RewardsDOMHandler::OnGetMonthlyStatements,
-          weak_factory_.GetWeakPtr()));
+      base::BindOnce(&RewardsDOMHandler::OnGetOneTimeTipsStatements,
+          weak_factory_.GetWeakPtr(),
+          webui_callback_id));
+}
+
+void RewardsDOMHandler::OnGetPublisherInfo(
+    const std::string& webui_callback_id,
+    std::unique_ptr<brave_rewards::ContentSite> content_site) {
+  AllowJavascript();
+  base::Value publisher(base::Value::Type::DICTIONARY);
+  publisher.SetStringKey("id", content_site->id);
+  publisher.SetDoubleKey("percentage", content_site->percentage);
+  publisher.SetBoolKey("verified", content_site->verified);
+  publisher.SetIntKey("excluded", content_site->excluded);
+  publisher.SetStringKey("name", content_site->name);
+  publisher.SetStringKey("favIcon", content_site->favicon_url);
+  publisher.SetStringKey("url", content_site->url);
+  publisher.SetStringKey("provider", content_site->provider);
+  LOG(ERROR) << "===============ID: " << content_site->id;
+  ResolveJavascriptCallback(
+      base::Value(webui_callback_id),
+      std::move(publisher));
+}
+
+void RewardsDOMHandler::GetPublisherInfo(
+    const base::ListValue* args) {
+  LOG(ERROR) << "======IN GETPUBLISHERINFO";
+  CHECK_EQ(2U, args->GetSize());
+  LOG(ERROR) << "==========ARGS: " << args->GetList()[0] << " AND " << args->GetList()[1];
+  std::string webui_callback_id = args->GetList()[0].GetString();
+  if (!rewards_service_) {
+    return;
+  }
+  std::string publisher_key = args->GetList()[1].GetString();
+  rewards_service_->GetPublisherInfo(
+      publisher_key,
+      base::BindOnce(&RewardsDOMHandler::OnGetPublisherInfo,
+          weak_factory_.GetWeakPtr(),
+          webui_callback_id));
 }
 
 }  // namespace

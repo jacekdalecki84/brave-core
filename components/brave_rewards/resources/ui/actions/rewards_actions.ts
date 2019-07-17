@@ -237,3 +237,8 @@ export const getMonthlyStatements = (month: number, year: number) => action(type
 export const onGetMonthlyStatements = (monthlyStatement: Rewards.MonthlyStatement) => action(types.ON_GET_MONTHLY_STATEMENTS, {
   monthlyStatement
 })
+
+export const addOneTimeTipContribution = (contribution: Rewards.Contribution, publisher: Rewards.Publisher) => action(types.ADD_ONE_TIME_TIP_CONTRIBUTION, {
+  contribution,
+  publisher
+})

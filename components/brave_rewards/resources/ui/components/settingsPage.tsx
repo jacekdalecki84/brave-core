@@ -43,7 +43,17 @@ class SettingsPage extends React.Component<Props, {}> {
     this.actions.getExcludedSites()
 
     const currentTime = new Date()
-    this.actions.getMonthlyStatements((currentTime.getMonth() + 1), currentTime.getFullYear())
+    const month = currentTime.getMonth() + 1
+    const year = currentTime.getFullYear()
+
+    this.getOneTimeTipStatements(month, year, (contributions: Rewards.Contribution[]) => {
+      for (const contribution of contributions) {
+        console.log('------contribution: ' + JSON.stringify(contribution))
+        this.getPublisherInfo(contribution.publisherKey, (publisher: Rewards.Publisher) => {
+          this.actions.addOneTimeTipContribution(contribution, publisher)
+        })
+      }
+    })
   }
 
   componentDidMount () {
@@ -86,6 +96,22 @@ class SettingsPage extends React.Component<Props, {}> {
       // https://github.com/brave/brave-browser/issues/3061
       this.actions.getWalletPassphrase()
     }
+  }
+
+  getOneTimeTipStatements = (month: number, year: number, callback: (contributions: Rewards.Contribution[]) => void) => {
+    window.cr.sendWithPromise('brave_rewards.getOneTimeTipsStatements',
+      month,
+      year).then((contributions: Rewards.Contribution[]) => {
+      callback(contributions)
+    })
+  }
+
+  getPublisherInfo = (publisherKey: string, callback: (publisher: Rewards.Publisher) => void) => {
+    window.cr.sendWithPromise('brave_rewards.getPublisherInfo',
+      publisherKey
+    ).then((publisher: Rewards.Publisher) => {
+      callback(publisher)
+    })
   }
 
   componentDidUpdate (prevProps: Props) {

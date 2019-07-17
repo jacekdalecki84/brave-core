@@ -2406,6 +2406,19 @@ ledger::mojom::AllTransactionsPtr GetAllTransactionsOnFileTaskRunner(
   return all_transactions;
 }
 
+ledger::ContributionInfoList GetStatementOneTimeTipsOnFileTaskRunner(
+    PublisherInfoDatabase* backend,
+    int32_t month,
+    uint32_t year) {
+  ledger::ContributionInfoList list;
+  if (!backend) {
+    return list;
+  }
+
+  backend->GetOneTimeTipsContributions(&list, month, year);
+  return list;
+}
+
 void RewardsServiceImpl::GetOneTimeTips(
     ledger::PublisherInfoListCallback callback) {
   base::PostTaskAndReplyWithResult(file_task_runner_.get(), FROM_HERE,
@@ -2428,6 +2441,31 @@ void RewardsServiceImpl::GetAllTransactions(
       base::Bind(&RewardsServiceImpl::OnGetAllTransactions,
                   AsWeakPtr(),
                   callback));
+}
+
+void RewardsServiceImpl::OnGetStatementOneTimeTips(
+    ledger::StatementsOneTimeTipsCallback callback,
+    ledger::ContributionInfoList list) {
+  if (!Connected()) {
+    callback(ledger::Result::LEDGER_ERROR, std::move(list));
+    return;
+  }
+
+  callback(ledger::Result::LEDGER_OK, std::move(list));
+}
+
+void RewardsServiceImpl::GetStatementOneTimeTips(
+    int32_t month,
+    uint32_t year,
+    ledger::StatementsOneTimeTipsCallback callback) {
+  base::PostTaskAndReplyWithResult(file_task_runner_.get(), FROM_HERE,
+      base::Bind(&GetStatementOneTimeTipsOnFileTaskRunner,
+                 publisher_info_backend_.get(),
+                 month,
+                 year),
+      base::Bind(&RewardsServiceImpl::OnGetStatementOneTimeTips,
+                 AsWeakPtr(),
+                 callback));
 }
 
 void RewardsServiceImpl::OnGetOneTimeTips(
@@ -3387,6 +3425,70 @@ void RewardsServiceImpl::GetMonthlyStatements(
   }
   bat_ledger_->GetAllTransactions(month, year,
       base::BindOnce(&RewardsServiceImpl::OnGetMonthlyStatement,
+          AsWeakPtr(),
+          std::move(callback)));
+}
+
+void RewardsServiceImpl::OnGetOneTimeTipsStatements(
+    GetOneTimeTipsStatementsCallback callback,
+    ledger::ContributionInfoList list) {
+  std::unique_ptr<ContributionInfoList> contribution_list =
+      std::make_unique<ContributionInfoList>();
+  for (auto& ledger_contribution : list) {
+    brave_rewards::ContributionInfo contribution;
+    contribution.probi = ledger_contribution->value;
+    contribution.date = ledger_contribution->date;
+    contribution.category = ledger_contribution->category;
+    contribution.publisher_key = ledger_contribution->publisher_key;
+    contribution_list->push_back(contribution);
+  }
+
+  std::move(callback).Run(std::move(contribution_list));
+}
+
+void RewardsServiceImpl::GetOneTimeTipsStatements(
+      int32_t month,
+      uint32_t year,
+      GetOneTimeTipsStatementsCallback callback) {
+    LOG(ERROR) << "=========IN GETONETIMETIPSSTATEMENTS";
+
+  if (!Connected()) {
+    return;
+  }
+  bat_ledger_->GetStatementOneTimeTips(month, year,
+      base::BindOnce(&RewardsServiceImpl::OnGetOneTimeTipsStatements,
+          AsWeakPtr(),
+          std::move(callback)));
+}
+
+void RewardsServiceImpl::OnGetPublisherInfo(
+    GetPublisherInfoCallback callback,
+    uint32_t result,
+    ledger::PublisherInfoPtr publisher) {
+  if (result == ledger::Result::LEDGER_OK) {
+    std::unique_ptr<ContentSite> content_site =
+        std::make_unique<ContentSite>();
+    content_site->id = publisher->id;
+    content_site->verified = publisher->verified;
+    content_site->excluded = publisher->excluded;
+    content_site->name = publisher->name;
+    content_site->favicon_url = publisher->favicon_url;
+    content_site->url = publisher->url;
+    content_site->provider = publisher->provider;
+    std::move(callback).Run(std::move(content_site));
+  }
+}
+
+void RewardsServiceImpl::GetPublisherInfo(
+      const std::string& publisher_key,
+      GetPublisherInfoCallback callback) {
+  if (!Connected()) {
+    return;
+  }
+
+  bat_ledger_->LoadPublisherInfo(
+      publisher_key,
+      base::BindOnce(&RewardsServiceImpl::OnGetPublisherInfo,
           AsWeakPtr(),
           std::move(callback)));
 }

@@ -52,6 +52,8 @@ using FetchBalanceCallback = std::function<void(ledger::Result,
                                                 ledger::BalancePtr)>;
 using MonthlyStatementCallback =
     std::function<void(ledger::mojom::MonthlyStatementsPtr)>;
+using GetOneTimeTipsStatementsCallback =
+    std::function<void(ledger::ContributionInfoList)>;
 
 class LEDGER_EXPORT Ledger {
  public:
@@ -277,6 +279,11 @@ class LEDGER_EXPORT Ledger {
 
   virtual void GetAllTransactions(
       const ledger::MonthlyStatementCallback& callback,
+      ledger::ACTIVITY_MONTH month,
+      uint32_t year) = 0;
+
+  virtual void GetOneTimeTipsStatements(
+      const ledger::GetOneTimeTipsStatementsCallback& callback,
       ledger::ACTIVITY_MONTH month,
       uint32_t year) = 0;
 };

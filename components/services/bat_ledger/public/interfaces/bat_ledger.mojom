@@ -150,6 +150,9 @@ interface BatLedger {
 
   GetAllTransactions(int32 month, uint32 year) =>
       (ledger.mojom.MonthlyStatements? monthly_statements);
+
+  GetStatementOneTimeTips(int32 month, uint32 year) =>
+      (array<ledger.mojom.ContributionInfo> list);
 };
 
 interface BatLedgerClient {
@@ -254,4 +257,10 @@ interface BatLedgerClient {
       int32 month, uint32 year) => (
       ledger.mojom.AllTransactions? transactions,
       uint32 next_record);
+
+  GetStatementOneTimeTips(
+      int32 month,
+      uint32 year) =>
+        (int32 result,
+        array<ledger.mojom.ContributionInfo> list);
 };
