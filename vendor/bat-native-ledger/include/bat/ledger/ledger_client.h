@@ -73,6 +73,7 @@ using RemovePendingContributionCallback = std::function<void(Result)>;
 using PendingContributionsTotalCallback = std::function<void(double)>;
 using GetCountryCodesCallback =
     std::function<void(const std::vector<int32_t>&)>;
+using SaveRecurringTipCallback = std::function<void(ledger::Result)>;
 
 class LEDGER_EXPORT LedgerClient {
  public:
@@ -167,6 +168,10 @@ class LEDGER_EXPORT LedgerClient {
       const uint32_t date,
       const std::string& publisher_key,
       const ledger::REWARDS_CATEGORY category) = 0;
+
+  virtual void SaveRecurringTip(
+      ledger::ContributionInfoPtr info,
+      ledger::SaveRecurringTipCallback callback) = 0;
 
   virtual void GetRecurringTips(
       ledger::PublisherInfoListCallback callback) = 0;

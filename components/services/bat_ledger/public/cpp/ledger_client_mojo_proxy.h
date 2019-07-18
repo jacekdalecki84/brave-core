@@ -60,6 +60,9 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
 
   void FetchFavIcon(const std::string& url, const std::string& favicon_key,
       FetchFavIconCallback callback) override;
+  void SaveRecurringTip(
+      ledger::ContributionInfoPtr info,
+      SaveRecurringTipCallback callback) override;
   void GetRecurringTips(GetRecurringTipsCallback callback) override;
 
   void GetOneTimeTips(GetOneTimeTipsCallback callback) override;
@@ -230,6 +233,10 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
       CallbackHolder<FetchFavIconCallback>* holder,
       bool success,
       const std::string& favicon_url);
+
+  static void OnSaveRecurringTip(
+      CallbackHolder<SaveRecurringTipCallback>* holder,
+      ledger::Result result);
 
   static void OnGetRecurringTips(
       CallbackHolder<GetRecurringTipsCallback>* holder,

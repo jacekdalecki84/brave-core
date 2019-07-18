@@ -208,8 +208,13 @@ class RewardsServiceImpl : public RewardsService,
       const std::string& publisher_key,
       RefreshPublisherCallback callback) override;
 
-  void SaveRecurringTip(const std::string& publisher_key,
-                             const int amount) override;
+  void OnSaveRecurringTipUI(
+      SaveRecurringTipCallback callback,
+      int32_t result);
+  void SaveRecurringTipUI(
+      const std::string& publisher_key,
+      const int amount,
+      SaveRecurringTipCallback callback) override;
 
   const RewardsNotificationService::RewardsNotificationsMap&
   GetAllNotifications() override;
@@ -319,7 +324,9 @@ class RewardsServiceImpl : public RewardsService,
              ledger::PublisherInfoPtr publisher_info);
   void OnContributionInfoSaved(const ledger::REWARDS_CATEGORY category,
                                bool success);
-  void OnRecurringTipSaved(bool success);
+  void OnRecurringTipSaved(
+      ledger::SaveRecurringTipCallback callback,
+      bool success);
   void OnGetRecurringTips(
       const ledger::PublisherInfoListCallback callback,
       ledger::PublisherInfoList list);
@@ -484,6 +491,9 @@ class RewardsServiceImpl : public RewardsService,
                             const uint32_t date,
                             const std::string& publisher_key,
                             const ledger::REWARDS_CATEGORY category) override;
+  void SaveRecurringTip(
+      ledger::ContributionInfoPtr info,
+      ledger::SaveRecurringTipCallback callback) override;
   void GetRecurringTips(
       ledger::PublisherInfoListCallback callback) override;
   std::unique_ptr<ledger::LogStream> Log(
