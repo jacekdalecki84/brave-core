@@ -170,14 +170,14 @@ void BatLedgerClientMojoProxy::OnGrantCaptcha(const std::string& image,
 }
 
 void BatLedgerClientMojoProxy::OnRecoverWallet(
-    ledger::Result result,
+    int32_t result,
     double balance,
     std::vector<ledger::GrantPtr> grants) {
   if (!Connected()) {
     return;
   }
 
-  bat_ledger_client_->OnRecoverWallet(ToMojomResult(result),
+  bat_ledger_client_->OnRecoverWallet(result,
                                       balance,
                                       std::move(grants));
 }

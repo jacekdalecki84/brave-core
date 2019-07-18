@@ -142,7 +142,7 @@ class LEDGER_EXPORT LedgerClient {
   virtual void OnGrantCaptcha(const std::string& image,
                               const std::string& hint) = 0;
 
-  virtual void OnRecoverWallet(Result result,
+  virtual void OnRecoverWallet(int32_t result,
                                double balance,
                                std::vector<ledger::GrantPtr> grants) = 0;
 

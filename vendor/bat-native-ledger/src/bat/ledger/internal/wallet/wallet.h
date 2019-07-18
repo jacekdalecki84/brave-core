@@ -42,7 +42,8 @@ class Wallet {
 
   void CreateWalletIfNecessary();
 
-  void RecoverWallet(const std::string& passPhrase);
+  void RecoverWallet(const std::string& passPhrase,
+      ledger::RecoverWalletCallback callback);
 
   std::string GetWalletPassphrase() const;
 

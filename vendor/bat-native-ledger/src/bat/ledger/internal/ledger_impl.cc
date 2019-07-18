@@ -748,8 +748,15 @@ std::string LedgerImpl::GetWalletPassphrase() const {
   return bat_wallet_->GetWalletPassphrase();
 }
 
-void LedgerImpl::RecoverWallet(const std::string& passPhrase) const {
-  bat_wallet_->RecoverWallet(passPhrase);
+void LedgerImpl::RecoverWallet(const std::string& passPhrase,
+    ledger::RecoverWalletCallback callback) const {
+  auto on_recover = std::bind(LedgerImpl::OnRecoverWallet,
+                              this,
+                               _1,
+                               _2,
+                               _3,
+                               std::move(callback));
+  bat_wallet_->RecoverWallet(passPhrase, std::move(on_recover));
 }
 
 void LedgerImpl::OnRecoverWallet(

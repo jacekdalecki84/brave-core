@@ -65,7 +65,7 @@ interface BatLedger {
   FetchGrants(string lang, string payment_id);
   GetGrantCaptcha(array<string> headers);
   GetWalletPassphrase() => (string wallet_passphrase);
-  RecoverWallet(string passPhrase);
+  RecoverWallet(string passPhrase) => (int32 result, double balance, array<ledger.mojom.Grant?> grants);
   SolveGrantCaptcha(string solution, string promotionId);
 
   GetAddresses(int32 current_country_code) => (map<string, string> addresses);

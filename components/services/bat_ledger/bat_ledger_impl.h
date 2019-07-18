@@ -76,7 +76,8 @@ class BatLedgerImpl : public mojom::BatLedger,
       const std::string& lang, const std::string& payment_id) override;
   void GetGrantCaptcha(const std::vector<std::string>& headers) override;
   void GetWalletPassphrase(GetWalletPassphraseCallback callback) override;
-  void RecoverWallet(const std::string& passPhrase) override;
+  void RecoverWallet(const std::string& passPhrase,
+      RecoverWalletCallback callback) override;
   void SolveGrantCaptcha(
       const std::string& solution,
       const std::string& promotionId) override;
@@ -206,6 +207,12 @@ class BatLedgerImpl : public mojom::BatLedger,
       base::WeakPtr<BatLedgerImpl> client_;
       Callback callback_;
     };
+
+  static void OnRecoverWallet(
+      CallbackHolder<RecoverWalletCallback>* holder,
+      int32_t result,
+      double balance,
+      std::vector<ledger::GrantPtr> grants);
 
   static void OnFetchWalletProperties(
       CallbackHolder<FetchWalletPropertiesCallback>* holder,
