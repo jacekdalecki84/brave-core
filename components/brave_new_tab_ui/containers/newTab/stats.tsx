@@ -62,8 +62,7 @@ class Stats extends React.Component<Props, {}> {
   }
 
   render () {
-    const trackedBlockersCount = this.trackedBlockersCount.toLocaleString()
-    const adblockCount = this.adblockCount.toLocaleString()
+    const trackedBlockersCount = (this.trackedBlockersCount + this.adblockCount).toLocaleString()
     const httpsUpgradedCount = this.httpsUpgradedCount.toLocaleString()
     const timeSaved = this.estimatedTimeSaved
 
@@ -72,10 +71,6 @@ class Stats extends React.Component<Props, {}> {
         <StatsItem
           description={getLocale('trackersBlocked')}
           counter={trackedBlockersCount}
-        />
-        <StatsItem
-          description={getLocale('adsBlocked')}
-          counter={adblockCount}
         />
         <StatsItem
           description={getLocale('httpsUpgraded')}
