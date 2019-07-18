@@ -87,6 +87,8 @@ export const defaultState: Rewards.State = {
     transactions: []
   },
   monthlyOneTimeTips: [],
+  monthlyRecurringTips: [],
+  monthlyAutoContribute: [],
   hasMonthlyStatement: false
 }
 

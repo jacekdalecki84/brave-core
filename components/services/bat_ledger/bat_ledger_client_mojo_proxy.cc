@@ -826,8 +826,8 @@ void BatLedgerClientMojoProxy::GetAllTransactions(
       base::BindOnce(&OnGetAllTransactions, std::move(callback)));
 }
 
-void OnGetStatementOneTimeTips(
-    const ledger::StatementsOneTimeTipsCallback& callback,
+void OnGetStatementContribution(
+    const ledger::StatementsContributionCallback& callback,
     int32_t result,
     ledger::ContributionInfoList list) {
   callback(ToLedgerResult(result), std::move(list));
@@ -836,7 +836,7 @@ void OnGetStatementOneTimeTips(
 void BatLedgerClientMojoProxy::GetStatementOneTimeTips(
     int32_t month,
     uint32_t year,
-    ledger::StatementsOneTimeTipsCallback callback) {
+    ledger::StatementsContributionCallback callback) {
   if (!Connected()) {
     ledger::ContributionInfoList list;
     callback(ledger::Result::LEDGER_ERROR, std::move(list));
@@ -846,7 +846,39 @@ void BatLedgerClientMojoProxy::GetStatementOneTimeTips(
   bat_ledger_client_->GetStatementOneTimeTips(
       month,
       year,
-      base::BindOnce(&OnGetStatementOneTimeTips, std::move(callback)));
+      base::BindOnce(&OnGetStatementContribution, std::move(callback)));
+}
+
+void BatLedgerClientMojoProxy::GetStatementRecurringTips(
+    int32_t month,
+    uint32_t year,
+    ledger::StatementsContributionCallback callback) {
+  if (!Connected()) {
+    ledger::ContributionInfoList list;
+    callback(ledger::Result::LEDGER_ERROR, std::move(list));
+    return;
+  }
+
+  bat_ledger_client_->GetStatementRecurringTips(
+      month,
+      year,
+      base::BindOnce(&OnGetStatementContribution, std::move(callback)));
+}
+
+void BatLedgerClientMojoProxy::GetStatementAutoContribute(
+    int32_t month,
+    uint32_t year,
+    ledger::StatementsContributionCallback callback) {
+  if (!Connected()) {
+    ledger::ContributionInfoList list;
+    callback(ledger::Result::LEDGER_ERROR, std::move(list));
+    return;
+  }
+
+  bat_ledger_client_->GetStatementAutoContribute(
+      month,
+      year,
+      base::BindOnce(&OnGetStatementContribution, std::move(callback)));
 }
 
 }  // namespace bat_ledger

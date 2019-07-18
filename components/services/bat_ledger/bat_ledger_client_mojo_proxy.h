@@ -168,7 +168,17 @@ class BatLedgerClientMojoProxy : public ledger::LedgerClient,
   void GetStatementOneTimeTips(
       int32_t month,
       uint32_t year,
-      ledger::StatementsOneTimeTipsCallback callback) override;
+      ledger::StatementsContributionCallback callback) override;
+
+  void GetStatementRecurringTips(
+      int32_t month,
+      uint32_t year,
+      ledger::StatementsContributionCallback callback) override;
+
+  void GetStatementAutoContribute(
+      int32_t month,
+      uint32_t year,
+      ledger::StatementsContributionCallback callback) override;
 
  private:
   bool Connected() const;

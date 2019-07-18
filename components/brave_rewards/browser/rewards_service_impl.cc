@@ -2419,6 +2419,32 @@ ledger::ContributionInfoList GetStatementOneTimeTipsOnFileTaskRunner(
   return list;
 }
 
+ledger::ContributionInfoList GetStatementRecurringTipsOnFileTaskRunner(
+    PublisherInfoDatabase* backend,
+    int32_t month,
+    uint32_t year) {
+  ledger::ContributionInfoList list;
+  if (!backend) {
+    return list;
+  }
+
+  backend->GetRecurringTipsContributions(&list, month, year);
+  return list;
+}
+
+ledger::ContributionInfoList GetStatementAutoContributeOnFileTaskRunner(
+    PublisherInfoDatabase* backend,
+    int32_t month,
+    uint32_t year) {
+  ledger::ContributionInfoList list;
+  if (!backend) {
+    return list;
+  }
+
+  backend->GetAutoContributions(&list, month, year);
+  return list;
+}
+
 void RewardsServiceImpl::GetOneTimeTips(
     ledger::PublisherInfoListCallback callback) {
   base::PostTaskAndReplyWithResult(file_task_runner_.get(), FROM_HERE,
@@ -2443,8 +2469,8 @@ void RewardsServiceImpl::GetAllTransactions(
                   callback));
 }
 
-void RewardsServiceImpl::OnGetStatementOneTimeTips(
-    ledger::StatementsOneTimeTipsCallback callback,
+void RewardsServiceImpl::OnGetStatementContribution(
+    ledger::StatementsContributionCallback callback,
     ledger::ContributionInfoList list) {
   if (!Connected()) {
     callback(ledger::Result::LEDGER_ERROR, std::move(list));
@@ -2457,13 +2483,41 @@ void RewardsServiceImpl::OnGetStatementOneTimeTips(
 void RewardsServiceImpl::GetStatementOneTimeTips(
     int32_t month,
     uint32_t year,
-    ledger::StatementsOneTimeTipsCallback callback) {
+    ledger::StatementsContributionCallback callback) {
   base::PostTaskAndReplyWithResult(file_task_runner_.get(), FROM_HERE,
       base::Bind(&GetStatementOneTimeTipsOnFileTaskRunner,
                  publisher_info_backend_.get(),
                  month,
                  year),
-      base::Bind(&RewardsServiceImpl::OnGetStatementOneTimeTips,
+      base::Bind(&RewardsServiceImpl::OnGetStatementContribution,
+                 AsWeakPtr(),
+                 callback));
+}
+
+void RewardsServiceImpl::GetStatementRecurringTips(
+    int32_t month,
+    uint32_t year,
+    ledger::StatementsContributionCallback callback) {
+  base::PostTaskAndReplyWithResult(file_task_runner_.get(), FROM_HERE,
+      base::Bind(&GetStatementRecurringTipsOnFileTaskRunner,
+                 publisher_info_backend_.get(),
+                 month,
+                 year),
+      base::Bind(&RewardsServiceImpl::OnGetStatementContribution,
+                 AsWeakPtr(),
+                 callback));
+}
+
+void RewardsServiceImpl::GetStatementAutoContribute(
+    int32_t month,
+    uint32_t year,
+    ledger::StatementsContributionCallback callback) {
+  base::PostTaskAndReplyWithResult(file_task_runner_.get(), FROM_HERE,
+      base::Bind(&GetStatementAutoContributeOnFileTaskRunner,
+                 publisher_info_backend_.get(),
+                 month,
+                 year),
+      base::Bind(&RewardsServiceImpl::OnGetStatementContribution,
                  AsWeakPtr(),
                  callback));
 }
@@ -3429,14 +3483,14 @@ void RewardsServiceImpl::GetMonthlyStatements(
           std::move(callback)));
 }
 
-void RewardsServiceImpl::OnGetOneTimeTipsStatements(
-    GetOneTimeTipsStatementsCallback callback,
+void RewardsServiceImpl::OnGetContributionStatments(
+    GetContributionStatementsCallback callback,
     ledger::ContributionInfoList list) {
   std::unique_ptr<ContributionInfoList> contribution_list =
       std::make_unique<ContributionInfoList>();
   for (auto& ledger_contribution : list) {
     brave_rewards::ContributionInfo contribution;
-    contribution.probi = ledger_contribution->value;
+    contribution.probi = std::to_string(ledger_contribution->value);
     contribution.date = ledger_contribution->date;
     contribution.category = ledger_contribution->category;
     contribution.publisher_key = ledger_contribution->publisher_key;
@@ -3449,14 +3503,38 @@ void RewardsServiceImpl::OnGetOneTimeTipsStatements(
 void RewardsServiceImpl::GetOneTimeTipsStatements(
       int32_t month,
       uint32_t year,
-      GetOneTimeTipsStatementsCallback callback) {
-    LOG(ERROR) << "=========IN GETONETIMETIPSSTATEMENTS";
-
+      GetContributionStatementsCallback callback) {
   if (!Connected()) {
     return;
   }
   bat_ledger_->GetStatementOneTimeTips(month, year,
-      base::BindOnce(&RewardsServiceImpl::OnGetOneTimeTipsStatements,
+      base::BindOnce(&RewardsServiceImpl::OnGetContributionStatments,
+          AsWeakPtr(),
+          std::move(callback)));
+}
+
+void RewardsServiceImpl::GetRecurringTipsStatements(
+      int32_t month,
+      uint32_t year,
+      GetContributionStatementsCallback callback) {
+  if (!Connected()) {
+    return;
+  }
+  bat_ledger_->GetStatementRecurringTips(month, year,
+      base::BindOnce(&RewardsServiceImpl::OnGetContributionStatments,
+          AsWeakPtr(),
+          std::move(callback)));
+}
+
+void RewardsServiceImpl::GetAutoContributeStatements(
+      int32_t month,
+      uint32_t year,
+      GetContributionStatementsCallback callback) {
+  if (!Connected()) {
+    return;
+  }
+  bat_ledger_->GetStatementAutoContribute(month, year,
+      base::BindOnce(&RewardsServiceImpl::OnGetContributionStatments,
           AsWeakPtr(),
           std::move(callback)));
 }

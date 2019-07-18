@@ -724,5 +724,46 @@ void BatLedgerImpl::GetStatementOneTimeTips(
         ToLedgerPublisherMonth(month), year);
 }
 
+void BatLedgerImpl::OnGetStatementRecurringTips(
+    CallbackHolder<GetStatementRecurringTipsCallback>* holder,
+    ledger::ContributionInfoList contributions) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(std::move(contributions));
+  delete holder;
+}
+
+void BatLedgerImpl::GetStatementRecurringTips(
+    int32_t month,
+    uint32_t year,
+    GetStatementRecurringTipsCallback callback) {
+  auto* holder = new CallbackHolder<GetStatementRecurringTipsCallback>(
+      AsWeakPtr(), std::move(callback));
+
+  ledger_->GetRecurringTipsStatements(
+    std::bind(
+      BatLedgerImpl::OnGetStatementRecurringTips, holder, _1),
+        ToLedgerPublisherMonth(month), year);
+}
+
+void BatLedgerImpl::OnGetStatementAutoContribute(
+    CallbackHolder<GetStatementAutoContributeCallback>* holder,
+    ledger::ContributionInfoList contributions) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(std::move(contributions));
+  delete holder;
+}
+
+void BatLedgerImpl::GetStatementAutoContribute(
+    int32_t month,
+    uint32_t year,
+    GetStatementAutoContributeCallback callback) {
+  auto* holder = new CallbackHolder<GetStatementAutoContributeCallback>(
+      AsWeakPtr(), std::move(callback));
+
+  ledger_->GetAutoContributeStatements(
+    std::bind(
+      BatLedgerImpl::OnGetStatementAutoContribute, holder, _1),
+        ToLedgerPublisherMonth(month), year);
+}
 
 }  // namespace bat_ledger

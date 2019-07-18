@@ -157,6 +157,16 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
       uint32_t year,
       GetStatementOneTimeTipsCallback callback) override;
 
+  void GetStatementRecurringTips(
+      int32_t month,
+      uint32_t year,
+      GetStatementRecurringTipsCallback callback) override;
+
+  void GetStatementAutoContribute(
+      int32_t month,
+      uint32_t year,
+      GetStatementAutoContributeCallback callback) override;
+
  private:
   // workaround to pass base::OnceCallback into std::bind
   // also serves as a wrapper for passing ledger::LedgerCallbackHandler*
@@ -293,6 +303,16 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
 
   static void OnGetStatementOneTimeTips(
       CallbackHolder<GetStatementOneTimeTipsCallback>* holder,
+      ledger::Result result,
+      ledger::ContributionInfoList list);
+
+  static void OnGetStatementRecurringTips(
+      CallbackHolder<GetStatementRecurringTipsCallback>* holder,
+      ledger::Result result,
+      ledger::ContributionInfoList list);
+
+  static void OnGetStatementAutoContribute(
+      CallbackHolder<GetStatementAutoContributeCallback>* holder,
       ledger::Result result,
       ledger::ContributionInfoList list);
 

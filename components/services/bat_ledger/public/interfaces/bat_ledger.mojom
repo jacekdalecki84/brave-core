@@ -153,6 +153,12 @@ interface BatLedger {
 
   GetStatementOneTimeTips(int32 month, uint32 year) =>
       (array<ledger.mojom.ContributionInfo> list);
+
+  GetStatementRecurringTips(int32 month, uint32 year) =>
+      (array<ledger.mojom.ContributionInfo> list);
+
+  GetStatementAutoContribute(int32 month, uint32 year) =>
+      (array<ledger.mojom.ContributionInfo> list);
 };
 
 interface BatLedgerClient {
@@ -259,6 +265,18 @@ interface BatLedgerClient {
       uint32 next_record);
 
   GetStatementOneTimeTips(
+      int32 month,
+      uint32 year) =>
+        (int32 result,
+        array<ledger.mojom.ContributionInfo> list);
+
+  GetStatementRecurringTips(
+      int32 month,
+      uint32 year) =>
+        (int32 result,
+        array<ledger.mojom.ContributionInfo> list);
+
+  GetStatementAutoContribute(
       int32 month,
       uint32 year) =>
         (int32 result,

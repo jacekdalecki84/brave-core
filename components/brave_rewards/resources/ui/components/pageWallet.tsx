@@ -63,7 +63,76 @@ class PageWallet extends React.Component<Props, State> {
     if (this.props.isPrint) {
       window.print()
     }
+    const currentTime = new Date()
+    const month = currentTime.getMonth() + 1
+    const year = currentTime.getFullYear()
+    this.actions.refreshStatements()
+    this.getMonthlyStatementItems(month, year)
   }
+
+  refreshStatements = (month: number, year: number) => {
+    this.actions.refreshStatements()
+    this.getMonthlyStatementItems(month, year)
+  }
+
+  getMonthlyStatementItems (month: number, year: number) {
+    this.getOneTimeTipStatements(month, year, (contributions: Rewards.Contribution[]) => {
+      for (const contribution of contributions) {
+        this.getPublisherInfo(contribution.publisherKey, (publisher: Rewards.Publisher) => {
+          this.actions.addOneTimeTipContribution(contribution, publisher)
+        })
+      }
+    })
+
+    this.getRecurringTipStatements(month, year, (contributions: Rewards.Contribution[]) => {
+      for (const contribution of contributions) {
+        this.getPublisherInfo(contribution.publisherKey, (publisher: Rewards.Publisher) => {
+          this.actions.addRecurringTipContribution(contribution, publisher)
+        })
+      }
+    })
+
+    this.getAutoContributeStatements(month, year, (contributions: Rewards.Contribution[]) => {
+      for (const contribution of contributions) {
+        this.getPublisherInfo(contribution.publisherKey, (publisher: Rewards.Publisher) => {
+          this.actions.addAutoContribution(contribution, publisher)
+        })
+      }
+    })
+  }
+
+  getOneTimeTipStatements = (month: number, year: number, callback: (contributions: Rewards.Contribution[]) => void) => {
+    window.cr.sendWithPromise('brave_rewards.getOneTimeTipsStatements',
+      month,
+      year).then((contributions: Rewards.Contribution[]) => {
+      callback(contributions)
+    })
+  }
+
+  getRecurringTipStatements = (month: number, year: number, callback: (contributions: Rewards.Contribution[]) => void) => {
+    window.cr.sendWithPromise('brave_rewards.getRecurringTipsStatements',
+    month,
+    year).then((contributions: Rewards.Contribution[]) => {
+      callback(contributions)
+    })
+  }
+
+  getAutoContributeStatements = (month: number, year: number, callback: (contributions: Rewards.Contribution[]) => void) => {
+    window.cr.sendWithPromise('brave_rewards.getAutoContributeStatements',
+    month,
+    year).then((contributions: Rewards.Contribution[]) => {
+      callback(contributions)
+    })
+  }
+
+  getPublisherInfo = (publisherKey: string, callback: (publisher: Rewards.Publisher) => void) => {
+    window.cr.sendWithPromise('brave_rewards.getPublisherInfo',
+      publisherKey
+    ).then((publisher: Rewards.Publisher) => {
+      callback(publisher)
+    })
+  }
+
 
   onModalBackupClose = () => {
     if (this.urlHashIs('#backup-restore')) {
@@ -487,10 +556,42 @@ class PageWallet extends React.Component<Props, State> {
     })
   }
 
-  getOneTimeTipRows = (rows: Rewards.MonthlyOneTimeTips[]): ContributeRows[] => {
+  getTipRows = (rows: Rewards.MonthlyRecurringTips[] | Rewards.MonthlyOneTimeTips[]): ContributeRows[] => {
     const { balance } = this.props.rewardsData
-    return rows.map((item: Rewards.MonthlyOneTimeTips) => {
-      console.log('--------indevidual item: ' + JSON.stringify(item))
+    return rows.map((item: Rewards.MonthlyRecurringTips | Rewards.MonthlyOneTimeTips) => {
+      let faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.url}`
+      if (item.publisher.favIcon && item.publisher.verified) {
+        faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.favIcon}`
+      }
+      let tipMonth = ''
+      let tipDayOfMonth = ''
+      if (item.contribution.category === 8) {
+        let tipDate = new Date(parseInt(item.contribution.date, 10) * 1000)
+        tipMonth = tipDate.toLocaleString(navigator.language, { month: 'short' })
+        tipDayOfMonth = tipDate.getDate().toString()
+      }
+
+      const amountValue = utils.convertProbiToFixed(item.contribution.probi)
+      return {
+        profile: {
+          name: item.publisher.name,
+          verified: item.publisher.verified,
+          provider: (item.publisher.provider ? item.publisher.provider : undefined) as Provider,
+          src: faviconUrl
+        },
+        url: item.publisher.url,
+        token: {
+          value: amountValue,
+          converted: amountValue !== '0.0' ? utils.convertBalance(amountValue, balance.rates) : '0.00'
+        },
+        tipDate: tipMonth !== '' && tipDayOfMonth !== '' && item.contribution.category === 8 ? tipMonth + ' ' + tipDayOfMonth : ''
+      }
+    })
+  }
+
+  getACRows = (rows: Rewards.MonthlyRecurringTips[] | Rewards.MonthlyOneTimeTips[]): ContributeRows[] => {
+    const { balance } = this.props.rewardsData
+    return rows.map((item: Rewards.MonthlyRecurringTips | Rewards.MonthlyOneTimeTips) => {
       let faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.url}`
       if (item.publisher.favIcon && item.publisher.verified) {
         faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.favIcon}`
@@ -522,30 +623,22 @@ class PageWallet extends React.Component<Props, State> {
   }
 
   getMonthlyStatementAutoContribute = (): ContributeRows[] => {
-    const { monthlyStatement } = this.props.rewardsData
-    const autoContribute = monthlyStatement.statementItems.filter((item: Rewards.StatementItem) => item.category === 2)
-    return this.getRows(autoContribute)
+    const { monthlyAutoContribute } = this.props.rewardsData
+    return this.getACRows(monthlyAutoContribute)
   }
 
   getMonthlyStatementMonthlyContributions = (): ContributeRows[] => {
-    const { monthlyStatement } = this.props.rewardsData
-    const monthlyDonation = monthlyStatement.statementItems.filter((item: Rewards.StatementItem) => item.category === 16)
-    return this.getRows(monthlyDonation)
+    const { monthlyRecurringTips } = this.props.rewardsData
+    return this.getTipRows(monthlyRecurringTips)
   }
 
   getMonthlyStatementTips = (): ContributeRows[] => {
     const { monthlyOneTimeTips } = this.props.rewardsData
-    console.log('========MONTHLY ONE TIME TIPS JSON: ' + JSON.stringify(monthlyOneTimeTips))
-    return this.getOneTimeTipRows(monthlyOneTimeTips)
-  }
-
-  getReconcileDayOfMonth = () => {
-    const { monthlyStatement } = this.props.rewardsData
-    return monthlyStatement.reconcileStamp
+    return this.getTipRows(monthlyOneTimeTips)
   }
 
   onMonthChange = (key: string) => {
-    this.actions.getMonthlyStatements((parseInt(key.split('_')[1], 10)), parseInt(key.split('_')[0], 10))
+    this.refreshStatements((parseInt(key.split('_')[1], 10)), parseInt(key.split('_')[0], 10))
   }
 
   getMonthlyStatementSummary = () => {
@@ -627,7 +720,7 @@ class PageWallet extends React.Component<Props, State> {
   }
 
   getPaymentDay = () => {
-    return utils.getDayOfMonthFromTimestampSeconds(this.getReconcileDayOfMonth())
+    return utils.getDayOfMonthFromTimestampSeconds(this.props.rewardsData.reconcileStamp.toString())
   }
 
   onPrintActivity = () => {

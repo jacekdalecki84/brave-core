@@ -65,6 +65,8 @@ declare namespace Rewards {
       transactions: MonthlyTransaction[]
     }
     monthlyOneTimeTips: MonthlyOneTimeTips[]
+    monthlyRecurringTips: MonthlyRecurringTips[]
+    monthlyAutoContribute: MonthlyAutoContribute[]
     monthsAvailable?: string[]
     pendingContributions: PendingContribution[]
     pendingContributionTotal: number
@@ -169,6 +171,16 @@ declare namespace Rewards {
   }
 
   export interface MonthlyOneTimeTips {
+    contribution: Contribution
+    publisher: Publisher
+  }
+
+  export interface MonthlyRecurringTips {
+    contribution: Contribution
+    publisher: Publisher
+  }
+
+  export interface MonthlyAutoContribute {
     contribution: Contribution
     publisher: Publisher
   }

@@ -141,6 +141,7 @@ class RewardsDOMHandler : public WebUIMessageHandler,
     int32_t result,
     std::unique_ptr<brave_rewards::Balance> balance);
   void GetOneTimeTipsStatements(const base::ListValue* args);
+  void GetRecurringTipsStatements(const base::ListValue* args);
 
   // RewardsServiceObserver implementation
   void OnWalletInitialized(brave_rewards::RewardsService* rewards_service,
@@ -220,11 +221,13 @@ class RewardsDOMHandler : public WebUIMessageHandler,
       const brave_rewards::RewardsNotificationService::RewardsNotificationsList&
           notifications_list) override;
 
-  void OnGetOneTimeTipsStatements(
+  void OnGetContributionStatements(
       const std::string& webui_callback_id,
       std::unique_ptr<brave_rewards::ContributionInfoList> contributions);
 
   void GetPublisherInfo(const base::ListValue* args);
+
+  void GetAutoContributeStatements(const base::ListValue* args);
 
   void OnGetPublisherInfo(
       const std::string& webui_callback_id,
@@ -359,6 +362,12 @@ void RewardsDOMHandler::RegisterMessages() {
       base::Unretained(this)));
   web_ui()->RegisterMessageCallback("brave_rewards.getPublisherInfo",
       base::BindRepeating(&RewardsDOMHandler::GetPublisherInfo,
+      base::Unretained(this)));
+  web_ui()->RegisterMessageCallback("brave_rewards.getRecurringTipsStatements",
+      base::BindRepeating(&RewardsDOMHandler::GetRecurringTipsStatements,
+      base::Unretained(this)));
+ web_ui()->RegisterMessageCallback("brave_rewards.getAutoContributeStatements",
+      base::BindRepeating(&RewardsDOMHandler::GetAutoContributeStatements,
       base::Unretained(this)));
 }
 
@@ -1316,15 +1325,13 @@ void RewardsDOMHandler::FetchBalance(const base::ListValue* args) {
   }
 }
 
-void RewardsDOMHandler::OnGetOneTimeTipsStatements(
+void RewardsDOMHandler::OnGetContributionStatements(
     const std::string& webui_callback_id,
     std::unique_ptr<brave_rewards::ContributionInfoList> list) {
-  LOG(ERROR) << "+++++++++IN ONGETONETIMETIPSSTATEMENTS";
   AllowJavascript();
   base::Value one_time_tips(base::Value::Type::LIST);
   for (const auto& item : *list) {
     base::Value tip(base::Value::Type::DICTIONARY);
-    LOG(ERROR) << "==========PUB KEY: " << item.publisher_key;
     tip.SetStringKey("publisherKey", item.publisher_key);
     tip.SetStringKey("probi", item.probi);
     tip.SetStringKey("date", std::to_string(item.date));
@@ -1339,7 +1346,6 @@ void RewardsDOMHandler::OnGetOneTimeTipsStatements(
 
 void RewardsDOMHandler::GetOneTimeTipsStatements(
     const base::ListValue* args) {
-  LOG(ERROR) << "=========IN GETONETIMETIPSSTATEMENTS";
   CHECK_EQ(3U, args->GetSize());
   std::string webui_callback_id = args->GetList()[0].GetString();
   if (!rewards_service_) {
@@ -1347,14 +1353,49 @@ void RewardsDOMHandler::GetOneTimeTipsStatements(
   }
   int32_t month = args->GetList()[1].GetInt();
   int32_t year = args->GetList()[2].GetInt();
-  LOG(ERROR) << "=========IN GETONETIMETIPSSTATEMENTS";
 
   rewards_service_->GetOneTimeTipsStatements(
       month,
       (uint32_t)year,
-      base::BindOnce(&RewardsDOMHandler::OnGetOneTimeTipsStatements,
+      base::BindOnce(&RewardsDOMHandler::OnGetContributionStatements,
           weak_factory_.GetWeakPtr(),
           webui_callback_id));
+}
+
+void RewardsDOMHandler::GetRecurringTipsStatements(
+    const base::ListValue* args) {
+  CHECK_EQ(3U, args->GetSize());
+  std::string webui_callback_id = args->GetList()[0].GetString();
+  if (!rewards_service_) {
+    return;
+  }
+  int32_t month = args->GetList()[1].GetInt();
+  int32_t year = args->GetList()[2].GetInt();
+
+  rewards_service_->GetRecurringTipsStatements(
+      month,
+      (uint32_t)year,
+      base::BindOnce(&RewardsDOMHandler::OnGetContributionStatements,
+      weak_factory_.GetWeakPtr(),
+      webui_callback_id));
+}
+
+void RewardsDOMHandler::GetAutoContributeStatements(
+    const base::ListValue* args) {
+  CHECK_EQ(3U, args->GetSize());
+  std::string webui_callback_id = args->GetList()[0].GetString();
+  if (!rewards_service_) {
+    return;
+  }
+  int32_t month = args->GetList()[1].GetInt();
+  int32_t year = args->GetList()[2].GetInt();
+
+  rewards_service_->GetAutoContributeStatements(
+      month,
+      (uint32_t)year,
+      base::BindOnce(&RewardsDOMHandler::OnGetContributionStatements,
+      weak_factory_.GetWeakPtr(),
+      webui_callback_id));
 }
 
 void RewardsDOMHandler::OnGetPublisherInfo(
@@ -1370,7 +1411,6 @@ void RewardsDOMHandler::OnGetPublisherInfo(
   publisher.SetStringKey("favIcon", content_site->favicon_url);
   publisher.SetStringKey("url", content_site->url);
   publisher.SetStringKey("provider", content_site->provider);
-  LOG(ERROR) << "===============ID: " << content_site->id;
   ResolveJavascriptCallback(
       base::Value(webui_callback_id),
       std::move(publisher));
@@ -1378,9 +1418,7 @@ void RewardsDOMHandler::OnGetPublisherInfo(
 
 void RewardsDOMHandler::GetPublisherInfo(
     const base::ListValue* args) {
-  LOG(ERROR) << "======IN GETPUBLISHERINFO";
   CHECK_EQ(2U, args->GetSize());
-  LOG(ERROR) << "==========ARGS: " << args->GetList()[0] << " AND " << args->GetList()[1];
   std::string webui_callback_id = args->GetList()[0].GetString();
   if (!rewards_service_) {
     return;

@@ -295,34 +295,44 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
       }
       break
     }
-    case types.GET_MONTHLY_STATEMENTS: {
-      chrome.send('brave_rewards.getMonthlyStatements', [
-        action.payload.month,
-        action.payload.year
-      ])
-      break
-    }
-    case types.ON_GET_MONTHLY_STATEMENTS: {
+    case types.REFRESH_STATEMENTS: {
       state = { ...state }
-      state.monthlyStatement = action.payload.monthlyStatement
+      state.monthlyOneTimeTips = []
+      state.monthlyRecurringTips = []
+      state.monthlyAutoContribute = []
       break
     }
     case types.ADD_ONE_TIME_TIP_CONTRIBUTION: {
-      state = { ...state }
-
       if (!state.monthlyOneTimeTips) {
         state.monthlyOneTimeTips = []
       }
-      console.log('contribution in reducer: ' + JSON.stringify(action.payload.contribution))
-      console.log('publisher in reducer: ' + JSON.stringify(action.payload.publisher))
-      const monthlyTip = {
+
+      state.monthlyOneTimeTips.push({
         contribution: action.payload.contribution,
         publisher: action.payload.publisher
+      })
+      break
+    }
+    case types.ADD_RECURRING_TIP_CONTRIBUTION: {
+      if (!state.monthlyRecurringTips) {
+        state.monthlyRecurringTips = []
       }
-      console.log('temp tip: ' + JSON.stringify(monthlyTip))
-      state.monthlyOneTimeTips.push(monthlyTip)
-      console.log('tips in reducer after merge: ' + JSON.stringify(state.monthlyOneTimeTips))
 
+      state.monthlyRecurringTips.push({
+        contribution: action.payload.contribution,
+        publisher: action.payload.publisher
+      })
+      break
+    }
+    case types.ADD_AUTO_CONTRIBUTION: {
+      if (!state.monthlyAutoContribute) {
+        state.monthlyAutoContribute = []
+      }
+
+      state.monthlyAutoContribute.push({
+        contribution: action.payload.contribution,
+        publisher: action.payload.publisher
+      })
       break
     }
   }

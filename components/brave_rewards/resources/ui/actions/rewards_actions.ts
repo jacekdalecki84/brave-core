@@ -229,16 +229,19 @@ export const onBalance = (status: number, balance: Rewards.Balance) => action(ty
   balance
 })
 
-export const getMonthlyStatements = (month: number, year: number) => action(types.GET_MONTHLY_STATEMENTS, {
-  month,
-  year
-})
-
-export const onGetMonthlyStatements = (monthlyStatement: Rewards.MonthlyStatement) => action(types.ON_GET_MONTHLY_STATEMENTS, {
-  monthlyStatement
-})
+export const refreshStatements = () => action(types.REFRESH_STATEMENTS)
 
 export const addOneTimeTipContribution = (contribution: Rewards.Contribution, publisher: Rewards.Publisher) => action(types.ADD_ONE_TIME_TIP_CONTRIBUTION, {
+  contribution,
+  publisher
+})
+
+export const addRecurringTipContribution = (contribution: Rewards.Contribution, publisher: Rewards.Publisher) => action(types.ADD_RECURRING_TIP_CONTRIBUTION, {
+  contribution,
+  publisher
+})
+
+export const addAutoContribution = (contribution: Rewards.Contribution, publisher: Rewards.Publisher) => action(types.ADD_AUTO_CONTRIBUTION, {
   contribution,
   publisher
 })

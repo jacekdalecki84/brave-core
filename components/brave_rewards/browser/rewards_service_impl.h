@@ -257,14 +257,24 @@ class RewardsServiceImpl : public RewardsService,
 
   void FetchBalance(FetchBalanceCallback callback) override;
 
-  void GetOneTimeTipsStatements(
-      int32_t month,
-      uint32_t year,
-      GetOneTimeTipsStatementsCallback callback) override;
-
   void GetPublisherInfo(
       const std::string& publisher_key,
       GetPublisherInfoCallback callback) override;
+
+  void GetOneTimeTipsStatements(
+      int32_t month,
+      uint32_t year,
+      GetContributionStatementsCallback callback) override;
+
+  void GetRecurringTipsStatements(
+      int32_t month,
+      uint32_t year,
+      GetContributionStatementsCallback callback) override;
+
+  void GetAutoContributeStatements(
+      int32_t month,
+      uint32_t year,
+      GetContributionStatementsCallback callback) override;
 
   // Testing methods
   void SetLedgerEnvForTesting();
@@ -599,22 +609,32 @@ class RewardsServiceImpl : public RewardsService,
   void GetStatementOneTimeTips(
       int32_t month,
       uint32_t year,
-      ledger::StatementsOneTimeTipsCallback callback) override;
+      ledger::StatementsContributionCallback callback) override;
+
+  void GetStatementRecurringTips(
+      int32_t month,
+      uint32_t year,
+      ledger::StatementsContributionCallback callback) override;
+
+  void GetStatementAutoContribute(
+      int32_t month,
+      uint32_t year,
+      ledger::StatementsContributionCallback callback) override;
 
   void OnGetAllTransactions(
       ledger::TransactionListCallback callback,
       ledger::mojom::AllTransactionsPtr transactions);
 
-  void OnGetStatementOneTimeTips(
-      ledger::StatementsOneTimeTipsCallback callback,
+  void OnGetStatementContribution(
+      ledger::StatementsContributionCallback callback,
       ledger::ContributionInfoList list);
 
   void OnGetMonthlyStatement(
       GetMonthlyStatementListCallback callback,
       ledger::mojom::MonthlyStatementsPtr monthly_statements);
 
-  void OnGetOneTimeTipsStatements(
-      GetOneTimeTipsStatementsCallback callback,
+  void OnGetContributionStatments(
+      GetContributionStatementsCallback callback,
       ledger::ContributionInfoList list);
 
   void OnGetPublisherInfo(

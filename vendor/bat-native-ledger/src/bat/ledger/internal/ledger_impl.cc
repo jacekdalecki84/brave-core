@@ -1756,23 +1756,101 @@ void LedgerImpl::GetAllTransactions(
                 callback));
 }
 
-void LedgerImpl::OnGetOneTimeTipsStatements(
+void LedgerImpl::OnGetContributionStatments(
     ledger::Result result,
     ledger::ContributionInfoList contributions,
-    ledger::GetOneTimeTipsStatementsCallback callback) {
+    ledger::GetContributionStatementsCallback callback) {
   if (result == ledger::Result::LEDGER_OK) {
     callback(std::move(contributions));
   }
 }
 
 void LedgerImpl::GetOneTimeTipsStatements(
-    const ledger::GetOneTimeTipsStatementsCallback& callback,
+    const ledger::GetContributionStatementsCallback& callback,
     ledger::ACTIVITY_MONTH month,
     uint32_t year) {
   ledger_client_->GetStatementOneTimeTips(
       month,
       year,
-      std::bind(&LedgerImpl::OnGetOneTimeTipsStatements,
+      std::bind(&LedgerImpl::OnGetContributionStatments,
+              this,
+              _1,
+              _2,
+              callback));
+}
+
+void LedgerImpl::GetRecurringTipsStatements(
+    const ledger::GetContributionStatementsCallback& callback,
+    ledger::ACTIVITY_MONTH month,
+    uint32_t year) {
+  ledger_client_->GetStatementRecurringTips(
+      month,
+      year,
+      std::bind(&LedgerImpl::OnGetContributionStatments,
+              this,
+              _1,
+              _2,
+              callback));
+}
+
+void LedgerImpl::OnGetAutoContributionStatments(
+    ledger::Result result,
+    ledger::ContributionInfoList contributions,
+    ledger::GetContributionStatementsCallback callback) {
+  if (result == ledger::Result::LEDGER_OK && contributions.size() != 0) {
+    DCHECK(contributions.size() == 1);
+    ledger::ContributionInfoPtr contribution = contributions[0]->Clone();
+    braveledger_bat_helper::Transactions txns = bat_state_->GetTransactions();
+    ledger::ContributionInfoList new_contributions;
+    for (const auto& tx: txns) {
+      double submission_stamp;
+      base::StringToDouble(tx.submissionStamp_, &submission_stamp);
+      base::Time::Exploded exploded;
+      base::Time::Exploded contr_explode;
+      base::Time::FromJsTime(submission_stamp).LocalExplode(&exploded);
+      base::Time::FromJsTime(contribution->date).LocalExplode(&contr_explode);
+      // TODO(jsadler) Transactions need to move to db to reliably retrieve
+      // auto contribute transactions
+      if (exploded.month == contr_explode.month &&
+          exploded.year == contr_explode.year &&
+          exploded.day_of_month == contr_explode.day_of_month &&
+          exploded.hour == contr_explode.hour &&
+          exploded.minute == contr_explode.minute) {
+        for (size_t b_ix = 0; b_ix < tx.ballots_.size(); b_ix++) {
+          double product(
+              static_cast<double>(tx.ballots_[b_ix].offset_) /
+              static_cast<double>(tx.votes_));
+          double contribution_amount;
+          base::StringToDouble(
+              tx.contribution_fiat_amount_, &contribution_amount);
+          double portion = product * contribution_amount;
+          std::string converted_portion =
+              base::NumberToString(portion * 10);  // bring tenths for probi
+
+          std::string ac_amount =
+              braveledger_bat_helper::ToProbi(converted_portion, 1);
+          ledger::ContributionInfoPtr new_contribution =
+              ledger::ContributionInfo::New();
+          new_contribution->publisher_key = tx.ballots_[b_ix].publisher_;
+          base::StringToDouble(ac_amount, &new_contribution->value);
+          new_contribution->date = contribution->date;
+          new_contribution->category = contribution->category;
+          new_contributions.push_back(std::move(new_contribution));
+        }
+      }
+    }
+    callback(std::move(new_contributions));
+  }
+}
+
+void LedgerImpl::GetAutoContributeStatements(
+    const ledger::GetContributionStatementsCallback& callback,
+    ledger::ACTIVITY_MONTH month,
+    uint32_t year) {
+  ledger_client_->GetStatementAutoContribute(
+      month,
+      year,
+      std::bind(&LedgerImpl::OnGetAutoContributionStatments,
               this,
               _1,
               _2,

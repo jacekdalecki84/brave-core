@@ -817,4 +817,54 @@ void LedgerClientMojoProxy::GetStatementOneTimeTips(
           _2));
 }
 
+// static
+void LedgerClientMojoProxy::OnGetStatementRecurringTips(
+    CallbackHolder<GetStatementRecurringTipsCallback>* holder,
+    ledger::Result result,
+    ledger::ContributionInfoList list) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(result, std::move(list));
+}
+
+void LedgerClientMojoProxy::GetStatementRecurringTips(
+    int32_t month,
+    uint32_t year,
+    GetStatementRecurringTipsCallback callback) {
+  // deleted in OnGetStatementRecurringTips
+  auto* holder = new CallbackHolder<GetStatementRecurringTipsCallback>(
+      AsWeakPtr(), std::move(callback));
+  ledger_client_->GetStatementRecurringTips(
+      month,
+      year,
+      std::bind(LedgerClientMojoProxy::OnGetStatementRecurringTips,
+          holder,
+          _1,
+          _2));
+}
+
+// static
+void LedgerClientMojoProxy::OnGetStatementAutoContribute(
+    CallbackHolder<GetStatementAutoContributeCallback>* holder,
+    ledger::Result result,
+    ledger::ContributionInfoList list) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(result, std::move(list));
+}
+
+void LedgerClientMojoProxy::GetStatementAutoContribute(
+    int32_t month,
+    uint32_t year,
+    GetStatementAutoContributeCallback callback) {
+  // deleted in OnGetStatementAutoContribute
+  auto* holder = new CallbackHolder<GetStatementAutoContributeCallback>(
+      AsWeakPtr(), std::move(callback));
+  ledger_client_->GetStatementAutoContribute(
+      month,
+      year,
+      std::bind(LedgerClientMojoProxy::OnGetStatementAutoContribute,
+          holder,
+          _1,
+          _2));
+}
+
 }  // namespace bat_ledger
