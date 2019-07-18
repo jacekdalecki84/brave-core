@@ -7,6 +7,7 @@ import { Reducer } from 'redux'
 // Constants
 import { types } from '../constants/new_tab_types'
 import { Preferences } from '../api/preferences'
+import { Stats } from '../api/stats'
 
 // API
 import * as gridAPI from '../api/topSites/grid'
@@ -146,7 +147,11 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
       break
 
     case types.NEW_TAB_STATS_UPDATED:
-      state = storage.getLoadTimeData(state)
+      const stats: Stats = payload.stats
+      state = {
+        ...state,
+        stats
+      }
       break
 
     case types.NEW_TAB_USE_ALTERNATIVE_PRIVATE_SEARCH_ENGINE:

@@ -7,6 +7,7 @@ import { action } from 'typesafe-actions'
 // Constants
 import { types } from '../constants/new_tab_types'
 import { Preferences } from '../api/preferences'
+import { Stats } from '../api/stats'
 
 export const topSitesDataUpdated = (topSites: NewTab.Site[]) => action(types.NEW_TAB_TOP_SITES_DATA_UPDATED, {
   topSites
@@ -62,7 +63,9 @@ export const gridSitesUpdated = (gridSites: NewTab.Site[]) => action(types.NEW_T
   gridSites
 })
 
-export const statsUpdated = () => action(types.NEW_TAB_STATS_UPDATED)
+export const statsUpdated = (stats: Stats) => action(types.NEW_TAB_STATS_UPDATED, {
+  stats
+})
 
 export const changePrivateSearchEngine = (shouldUse: boolean) => action(types.NEW_TAB_USE_ALTERNATIVE_PRIVATE_SEARCH_ENGINE, {
   shouldUse

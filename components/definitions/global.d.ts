@@ -7,6 +7,8 @@ export {}
 
 type loadTimeData = {
   getString: (key: string) => string
+  getInteger: (key: string) => number
+  getBoolean: (key: string) => boolean
   data_: Record<string, string>
 }
 

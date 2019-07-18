@@ -9,21 +9,80 @@
 
 #include "base/bind.h"
 #include "base/values.h"
-#include "brave/browser/ui/webui/brave_new_tab_ui.h"
 #include "brave/browser/search_engines/search_engine_provider_util.h"
+#include "brave/browser/ui/webui/brave_new_tab_ui.h"
 #include "brave/common/pref_names.h"
 #include "chrome/browser/profiles/profile.h"
+#include "content/public/browser/web_ui_data_source.h"
+#include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_service.h"
 
-BraveNewTabMessageHandler::BraveNewTabMessageHandler(BraveNewTabUI* web_ui)
-          : new_tab_web_ui_(web_ui) {
+namespace {
+
+bool IsPrivateNewTab(Profile* profile) {
+  return profile->IsTorProfile() || profile->IsIncognitoProfile();
+}
+
+} // namespace
+
+// static
+BraveNewTabMessageHandler* BraveNewTabMessageHandler::Create(
+      content::WebUIDataSource* source, Profile* profile) {
+  //
+  // Initial Values
+  //
+  // Stats
+  PrefService* prefs = profile->GetPrefs();
+  source->AddInteger(
+    "adsBlockedStat",
+    prefs->GetUint64(kAdsBlocked));
+  source->AddInteger(
+    "trackersBlockedStat",
+    prefs->GetUint64(kTrackersBlocked));
+  source->AddInteger(
+    "javascriptBlockedStat",
+    prefs->GetUint64(kJavascriptBlocked));
+  source->AddInteger(
+    "httpsUpgradesStat",
+    prefs->GetUint64(kHttpsUpgrades));
+  source->AddInteger(
+    "fingerprintingBlockedStat",
+    prefs->GetUint64(kFingerprintingBlocked));
+  // Private Tab info
+  if (IsPrivateNewTab(profile)) {
+    source->AddBoolean(
+      "useAlternativePrivateSearchEngine",
+      prefs->GetBoolean(kUseAlternativeSearchEngineProvider));
+    source->AddBoolean(
+      "isTor", profile->IsTorProfile());
+    source->AddBoolean(
+      "isQwant", brave::IsRegionForQwant(profile));
+  }
+  // Preferences
+  source->AddBoolean(
+      "showBackgroundImage",
+      prefs->GetBoolean(kNewTabPageShowBackgroundImage));
+  source->AddBoolean(
+      "showClock",
+      prefs->GetBoolean(kNewTabPageShowClock));
+  source->AddBoolean(
+      "showTopSites",
+      prefs->GetBoolean(kNewTabPageShowTopSites));
+  source->AddBoolean(
+      "showStats",
+      prefs->GetBoolean(kNewTabPageShowStats));
+  return new BraveNewTabMessageHandler(profile);
+}
+
+BraveNewTabMessageHandler::BraveNewTabMessageHandler(Profile* profile)
+    : profile_(profile) {
 }
 
 BraveNewTabMessageHandler::~BraveNewTabMessageHandler() {}
 
 void BraveNewTabMessageHandler::OnJavascriptAllowed() {
   // Observe relevant preferences
-  PrefService* prefs = Profile::FromWebUI(web_ui())->GetPrefs();
+  PrefService* prefs = profile_->GetPrefs();
   pref_change_registrar_.Init(prefs);
   // Stats
   pref_change_registrar_.Add(kAdsBlocked,
@@ -35,13 +94,15 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
   pref_change_registrar_.Add(kHttpsUpgrades,
     base::Bind(&BraveNewTabMessageHandler::OnStatsChanged,
     base::Unretained(this)));
-  // Private New Tab Page preferences
-  pref_change_registrar_.Add(kUseAlternativeSearchEngineProvider,
-    base::Bind(&BraveNewTabMessageHandler::OnPrivatePropertiesChanged,
-    base::Unretained(this)));
-  pref_change_registrar_.Add(kAlternativeSearchEngineProviderInTor,
-    base::Bind(&BraveNewTabMessageHandler::OnPrivatePropertiesChanged,
-    base::Unretained(this)));
+  if (IsPrivateNewTab(profile_)) {
+    // Private New Tab Page preferences
+    pref_change_registrar_.Add(kUseAlternativeSearchEngineProvider,
+      base::Bind(&BraveNewTabMessageHandler::OnPrivatePropertiesChanged,
+      base::Unretained(this)));
+    pref_change_registrar_.Add(kAlternativeSearchEngineProviderInTor,
+      base::Bind(&BraveNewTabMessageHandler::OnPrivatePropertiesChanged,
+      base::Unretained(this)));
+  }
   // New Tab Page preferences
   pref_change_registrar_.Add(kNewTabPageShowBackgroundImage,
     base::Bind(&BraveNewTabMessageHandler::OnPreferencesChanged,
@@ -81,23 +142,11 @@ void BraveNewTabMessageHandler::RegisterMessages() {
 
 void BraveNewTabMessageHandler::HandleInitialized(const base::ListValue* args) {
   AllowJavascript();
-  // Force all the data to update in order to resolve a timing / singleton
-  // issue where the JS does not have access to the WebUIProperty data set
-  // on render_view_host in the WebUIController (BraveNewTabUI)
-  // (see https://github.com/brave/brave-browser/issues/5249).
-  // TODO(petemill): However, to properly resolve this, we may want to
-  // use loadTimeData directly in this MessageHandler to set the initial
-  // properties for all renders of the WebUI and then send the updated data
-  // in the event fire.
-  OnStatsChanged();
-  OnPrivatePropertiesChanged();
-  OnPreferencesChanged();
 }
 
 void BraveNewTabMessageHandler::HandleToggleAlternativeSearchEngineProvider(
     const base::ListValue* args) {
-  brave::ToggleUseAlternativeSearchEngineProvider(
-      Profile::FromWebUI(web_ui()));
+  brave::ToggleUseAlternativeSearchEngineProvider(profile_);
 }
 
 void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
@@ -106,7 +155,7 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
     LOG(ERROR) << "Invalid input";
     return;
   }
-  PrefService* prefs = Profile::FromWebUI(web_ui())->GetPrefs();
+  PrefService* prefs = profile_->GetPrefs();
   // Collect args
   std::string settingsKeyInput = args->GetList()[0].GetString();
   auto settingsValue = args->GetList()[1].Clone();
@@ -135,24 +184,49 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
 }
 
 void BraveNewTabMessageHandler::OnPrivatePropertiesChanged() {
-  // TODO(petemill): This is a bit of a layer violation as we're
-  // calling the controller from the message handler.
-  // Instead, we can send the updated data along with the event.
-  new_tab_web_ui_->OnPrivatePropertiesChanged();
+  PrefService* prefs = profile_->GetPrefs();
+  base::DictionaryValue private_data;
+  private_data.SetBoolean(
+      "useAlternativePrivateSearchEngine",
+      prefs->GetBoolean(kUseAlternativeSearchEngineProvider));
+  FireWebUIListener("private-tab-data-updated", private_data);
 }
 
 void BraveNewTabMessageHandler::OnStatsChanged() {
-  // TODO(petemill): This is a bit of a layer violation as we're
-  // calling the controller from the message handler.
-  // Instead, we can send the updated data along with the event.
-  new_tab_web_ui_->OnStatsChanged();
-  FireWebUIListener("stats-updated");
+  PrefService* prefs = profile_->GetPrefs();
+  base::DictionaryValue stats_data;
+  stats_data.SetInteger(
+    "adsBlockedStat",
+    prefs->GetUint64(kAdsBlocked));
+  stats_data.SetInteger(
+    "trackersBlockedStat",
+    prefs->GetUint64(kTrackersBlocked));
+  stats_data.SetInteger(
+    "javascriptBlockedStat",
+    prefs->GetUint64(kJavascriptBlocked));
+  stats_data.SetInteger(
+    "httpsUpgradesStat",
+    prefs->GetUint64(kHttpsUpgrades));
+  stats_data.SetInteger(
+    "fingerprintingBlockedStat",
+    prefs->GetUint64(kFingerprintingBlocked));
+  FireWebUIListener("stats-updated", stats_data);
 }
 
 void BraveNewTabMessageHandler::OnPreferencesChanged() {
-  // TODO(petemill): This is a bit of a layer violation as we're
-  // calling the controller from the message handler.
-  // Instead, we can send the updated data along with the event.
-  new_tab_web_ui_->OnPreferencesChanged();
-  FireWebUIListener("preferences-changed");
+  PrefService* prefs = profile_->GetPrefs();
+  base::DictionaryValue pref_data;
+  pref_data.SetBoolean(
+      "showBackgroundImage",
+      prefs->GetBoolean(kNewTabPageShowBackgroundImage));
+  pref_data.SetBoolean(
+      "showClock",
+      prefs->GetBoolean(kNewTabPageShowClock));
+  pref_data.SetBoolean(
+      "showTopSites",
+      prefs->GetBoolean(kNewTabPageShowTopSites));
+  pref_data.SetBoolean(
+      "showStats",
+      prefs->GetBoolean(kNewTabPageShowStats));
+  FireWebUIListener("preferences-changed", pref_data);
 }

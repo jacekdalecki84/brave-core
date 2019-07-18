@@ -6,6 +6,8 @@ import * as backgroundAPI from './api/background'
 
 // Utils
 import { debounce } from '../common/debounce'
+import newTab from './containers/newTab';
+import NewPrivateTabPage from './containers/privateTab';
 
 const keyName = 'new-tab-data'
 
@@ -22,8 +24,8 @@ const defaultState: NewTab.State = {
   showEmptyPage: false,
   isIncognito: chrome.extension.inIncognitoContext,
   useAlternativePrivateSearchEngine: false,
-  isTor: chrome.getVariableValue('isTor') === 'true',
-  isQwant: chrome.getVariableValue('isQwant') === 'true',
+  isTor: false,
+  isQwant: false,
   bookmarks: {},
   stats: {
     adsBlockedStat: 0,
@@ -37,32 +39,42 @@ const defaultState: NewTab.State = {
 export const getLoadTimeData = (state: NewTab.State) => {
   state = { ...state }
   state.stats = defaultState.stats
-  ;['adsBlockedStat', 'trackersBlockedStat', 'javascriptBlockedStat',
-    'httpsUpgradesStat', 'fingerprintingBlockedStat'].forEach((stat) => {
-      state.stats[stat] = parseInt(chrome.getVariableValue(stat), 10) || 0
-    })
-  state.useAlternativePrivateSearchEngine = chrome.getVariableValue('useAlternativePrivateSearchEngine') === 'true'
+  if (chrome.extension.inIncognitoContext) {
+    state.isTor = window.loadTimeData.getBoolean('isTor')
+    state.isQwant = window.loadTimeData.getBoolean('isQwant')
+    state.useAlternativePrivateSearchEngine =
+      window.loadTimeData.getBoolean('useAlternativePrivateSearchEngine')
+  }
   return state
 }
 
-const cleanData = (state: NewTab.State): NewTab.State => {
+const cleanData = (state: NewTab.State): NewTab.PersistantState => {
   state = { ...state }
-  state.backgroundImage = backgroundAPI.randomBackgroundImage()
-  state = getLoadTimeData(state)
+  // Don't save items which we aren't the source
+  // of data for.
+  delete state.stats
   return state
 }
 
 export const load = (): NewTab.State => {
-  const data = window.localStorage.getItem(keyName)
+  const data: string | undefined = window.localStorage.getItem(keyName)
   let state = defaultState
+  let storedState: NewTab.PersistantState
   if (data) {
     try {
-      state = JSON.parse(data)
+      storedState = JSON.parse(data)
+      // add defaults for non-peristant data
+      state = {
+        ...defaultState,
+        ...storedState
+      }
     } catch (e) {
       console.error('Could not parse local storage data: ', e)
     }
   }
-  return cleanData(state)
+  state.backgroundImage = backgroundAPI.randomBackgroundImage()
+  state = getLoadTimeData(state)
+  return state
 }
 
 export const debouncedSave = debounce<NewTab.State>((data: NewTab.State) => {

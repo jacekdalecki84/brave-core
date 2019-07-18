@@ -40,7 +40,7 @@ declare namespace NewTab {
     url: string
   }
 
-  export interface State {
+  export interface PersistantState {
     topSites: Site[]
     ignoredTopSites: Site[]
     pinnedTopSites: Site[]
@@ -51,7 +51,6 @@ declare namespace NewTab {
     isTor: boolean
     isQwant: boolean
     bookmarks: Record<string, Bookmark>
-    stats: Stats
     backgroundImage?: Image
     gridLayoutSize?: 'small'
     showSiteRemovalNotification?: boolean
@@ -60,5 +59,10 @@ declare namespace NewTab {
     showStats: boolean
     showClock: boolean
     showTopSites: boolean
+  }
+
+  // In-memory state is a superset of PersistantState
+  export type State = PersistantState & {
+    stats: Stats
   }
 }

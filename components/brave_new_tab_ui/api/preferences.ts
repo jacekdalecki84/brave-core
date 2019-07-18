@@ -17,8 +17,10 @@ export type Preferences = {
   showTopSites: boolean
 }
 
-function getWebUIBooleanVal (key: string): boolean {
-  return (chrome.getVariableValue(key).toLowerCase() === 'true')
+type PreferencesUpdatedHandler = (prefData: Preferences) => void
+
+function getWebUIBoolean (key: string): boolean {
+  return window.loadTimeData.getBoolean(key)
 }
 
 export function getPreferences (): Promise<Preferences> {
@@ -27,10 +29,10 @@ export function getPreferences (): Promise<Preferences> {
   // Enforces practice of not setting directly
   // in a redux reducer.
   return Promise.resolve({
-    showBackgroundImage: getWebUIBooleanVal('showBackgroundImage'),
-    showStats: getWebUIBooleanVal('showStats'),
-    showClock: getWebUIBooleanVal('showClock'),
-    showTopSites: getWebUIBooleanVal('showTopSites')
+    showBackgroundImage: getWebUIBoolean('showBackgroundImage'),
+    showStats: getWebUIBoolean('showStats'),
+    showClock: getWebUIBoolean('showClock'),
+    showTopSites: getWebUIBoolean('showTopSites')
   })
 }
 
@@ -54,6 +56,6 @@ export function saveShowStats (value: boolean): void {
   sendSavePref('showStats', value)
 }
 
-export function addChangeListener (listener: () => void): void {
+export function addChangeListener (listener: PreferencesUpdatedHandler): void {
   window.cr.addWebUIListener('preferences-changed', listener)
 }
