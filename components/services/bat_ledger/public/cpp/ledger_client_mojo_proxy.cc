@@ -638,11 +638,15 @@ void LedgerClientMojoProxy::OnGetOneTimeTips(
 }
 
 void LedgerClientMojoProxy::GetOneTimeTips(
+    int32_t month,
+    uint32_t year,
     GetOneTimeTipsCallback callback) {
   // deleted in OnGetOneTimeTips
   auto* holder = new CallbackHolder<GetOneTimeTipsCallback>(
       AsWeakPtr(), std::move(callback));
   ledger_client_->GetOneTimeTips(
+      month,
+      year,
       std::bind(LedgerClientMojoProxy::OnGetOneTimeTips,
                 holder,
                 _1,
@@ -790,31 +794,6 @@ void LedgerClientMojoProxy::GetAllTransactions(
                 holder,
                 _1,
                 _2));
-}
-
-// static
-void LedgerClientMojoProxy::OnGetStatementOneTimeTips(
-    CallbackHolder<GetStatementOneTimeTipsCallback>* holder,
-    ledger::Result result,
-    ledger::ContributionInfoList list) {
-  if (holder->is_valid())
-    std::move(holder->get()).Run(result, std::move(list));
-}
-
-void LedgerClientMojoProxy::GetStatementOneTimeTips(
-    int32_t month,
-    uint32_t year,
-    GetStatementOneTimeTipsCallback callback) {
-  // deleted in OnGetStatementOneTimeTips
-  auto* holder = new CallbackHolder<GetStatementOneTimeTipsCallback>(
-      AsWeakPtr(), std::move(callback));
-  ledger_client_->GetStatementOneTimeTips(
-      month,
-      year,
-      std::bind(LedgerClientMojoProxy::OnGetStatementOneTimeTips,
-          holder,
-          _1,
-          _2));
 }
 
 // static

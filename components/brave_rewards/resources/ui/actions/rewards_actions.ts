@@ -229,7 +229,7 @@ export const onBalance = (status: number, balance: Rewards.Balance) => action(ty
   balance
 })
 
-export const refreshStatements = () => action(types.REFRESH_STATEMENTS)
+export const clearStatements = () => action(types.CLEAR_STATEMENTS)
 
 export const addOneTimeTipContribution = (contribution: Rewards.Contribution, publisher: Rewards.Publisher) => action(types.ADD_ONE_TIME_TIP_CONTRIBUTION, {
   contribution,

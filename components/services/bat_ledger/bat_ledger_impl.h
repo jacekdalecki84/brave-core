@@ -141,7 +141,10 @@ class BatLedgerImpl : public mojom::BatLedger,
 
   void GetRecurringTips(GetRecurringTipsCallback callback) override;
 
-  void GetOneTimeTips(GetOneTimeTipsCallback callback) override;
+  void GetOneTimeTips(
+      int32_t month,
+      uint32_t year,
+      GetOneTimeTipsCallback callback) override;
 
   void GetActivityInfoList(
     uint32_t start,
@@ -190,11 +193,6 @@ class BatLedgerImpl : public mojom::BatLedger,
       int32_t month,
       uint32_t year,
       GetAllTransactionsCallback callback) override;
-
-  void GetStatementOneTimeTips(
-      int32_t month,
-      uint32_t year,
-      GetStatementOneTimeTipsCallback callback) override;
 
   void GetStatementRecurringTips(
       int32_t month,
@@ -304,10 +302,6 @@ class BatLedgerImpl : public mojom::BatLedger,
   static void OnGetAllTransactions(
       CallbackHolder<GetAllTransactionsCallback>* holder,
       ledger::mojom::MonthlyStatementsPtr monthly_statements);
-
-  static void OnGetStatementOneTimeTips(
-      CallbackHolder<GetStatementOneTimeTipsCallback>* holder,
-      ledger::ContributionInfoList contributions);
 
   static void OnGetStatementRecurringTips(
       CallbackHolder<GetStatementRecurringTipsCallback>* holder,

@@ -449,11 +449,17 @@ void BatLedgerImpl::OnGetOneTimeTips(
   delete holder;
 }
 
-void BatLedgerImpl::GetOneTimeTips(GetOneTimeTipsCallback callback) {
+void BatLedgerImpl::GetOneTimeTips(
+    int32_t month,
+    uint32_t year,
+    GetOneTimeTipsCallback callback) {
   auto* holder = new CallbackHolder<GetOneTimeTipsCallback>(
       AsWeakPtr(), std::move(callback));
 
-  ledger_->GetOneTimeTips(std::bind(
+  ledger_->GetOneTimeTips(
+      month,
+      year,
+      std::bind(
       BatLedgerImpl::OnGetOneTimeTips, holder, _1, _2));
 }
 
@@ -700,27 +706,6 @@ void BatLedgerImpl::GetAllTransactions(
 
   ledger_->GetAllTransactions(std::bind(
       BatLedgerImpl::OnGetAllTransactions, holder, _1),
-        ToLedgerPublisherMonth(month), year);
-}
-
-void BatLedgerImpl::OnGetStatementOneTimeTips(
-    CallbackHolder<GetStatementOneTimeTipsCallback>* holder,
-    ledger::ContributionInfoList contributions) {
-  if (holder->is_valid())
-    std::move(holder->get()).Run(std::move(contributions));
-  delete holder;
-}
-
-void BatLedgerImpl::GetStatementOneTimeTips(
-    int32_t month,
-    uint32_t year,
-    GetStatementOneTimeTipsCallback callback) {
-  auto* holder = new CallbackHolder<GetStatementOneTimeTipsCallback>(
-      AsWeakPtr(), std::move(callback));
-
-  ledger_->GetOneTimeTipsStatements(
-    std::bind(
-      BatLedgerImpl::OnGetStatementOneTimeTips, holder, _1),
         ToLedgerPublisherMonth(month), year);
 }
 

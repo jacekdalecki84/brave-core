@@ -62,7 +62,10 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
       FetchFavIconCallback callback) override;
   void GetRecurringTips(GetRecurringTipsCallback callback) override;
 
-  void GetOneTimeTips(GetOneTimeTipsCallback callback) override;
+  void GetOneTimeTips(
+      int32_t month,
+      uint32_t year,
+      GetOneTimeTipsCallback callback) override;
 
   void LoadNicewareList(LoadNicewareListCallback callback) override;
   void OnRemoveRecurring(const std::string& publisher_key,
@@ -151,11 +154,6 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
       int32_t month,
       uint32_t year,
       GetAllTransactionsCallback callback) override;
-
-  void GetStatementOneTimeTips(
-      int32_t month,
-      uint32_t year,
-      GetStatementOneTimeTipsCallback callback) override;
 
   void GetStatementRecurringTips(
       int32_t month,
@@ -301,17 +299,12 @@ class LedgerClientMojoProxy : public mojom::BatLedgerClient,
       ledger::mojom::AllTransactionsPtr transactions,
       uint32_t next_record);
 
-  static void OnGetStatementOneTimeTips(
-      CallbackHolder<GetStatementOneTimeTipsCallback>* holder,
-      ledger::Result result,
-      ledger::ContributionInfoList list);
-
   static void OnGetStatementRecurringTips(
       CallbackHolder<GetStatementRecurringTipsCallback>* holder,
       ledger::Result result,
       ledger::ContributionInfoList list);
 
-  static void OnGetStatementAutoContribute(
+      static void OnGetStatementAutoContribute(
       CallbackHolder<GetStatementAutoContributeCallback>* holder,
       ledger::Result result,
       ledger::ContributionInfoList list);

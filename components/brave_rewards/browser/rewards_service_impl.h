@@ -174,6 +174,8 @@ class RewardsServiceImpl : public RewardsService,
       ledger::PublisherInfoList list);
   void GetRecurringTipsUI(GetRecurringTipsCallback callback) override;
   void GetOneTimeTips(
+      int32_t month,
+      uint32_t year,
       ledger::PublisherInfoListCallback callback) override;
   void SetContributionAutoInclude(
       const std::string& publisher_key,
@@ -264,7 +266,7 @@ class RewardsServiceImpl : public RewardsService,
   void GetOneTimeTipsStatements(
       int32_t month,
       uint32_t year,
-      GetContributionStatementsCallback callback) override;
+      GetRecurringTipsCallback callback) override;
 
   void GetRecurringTipsStatements(
       int32_t month,
@@ -605,11 +607,6 @@ class RewardsServiceImpl : public RewardsService,
       int32_t month,
       uint32_t year,
       ledger::TransactionListCallback callback) override;
-
-  void GetStatementOneTimeTips(
-      int32_t month,
-      uint32_t year,
-      ledger::StatementsContributionCallback callback) override;
 
   void GetStatementRecurringTips(
       int32_t month,

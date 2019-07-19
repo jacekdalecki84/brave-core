@@ -66,12 +66,12 @@ class PageWallet extends React.Component<Props, State> {
     const currentTime = new Date()
     const month = currentTime.getMonth() + 1
     const year = currentTime.getFullYear()
-    this.actions.refreshStatements()
+    this.actions.clearStatements()
     this.getMonthlyStatementItems(month, year)
   }
 
-  refreshStatements = (month: number, year: number) => {
-    this.actions.refreshStatements()
+  clearStatements = (month: number, year: number) => {
+    this.actions.clearStatements()
     this.getMonthlyStatementItems(month, year)
   }
 
@@ -638,7 +638,7 @@ class PageWallet extends React.Component<Props, State> {
   }
 
   onMonthChange = (key: string) => {
-    this.refreshStatements((parseInt(key.split('_')[1], 10)), parseInt(key.split('_')[0], 10))
+    this.clearStatements((parseInt(key.split('_')[1], 10)), parseInt(key.split('_')[0], 10))
   }
 
   getMonthlyStatementSummary = () => {

@@ -478,6 +478,8 @@ void OnGetOneTimeTips(const ledger::PublisherInfoListCallback& callback,
 }
 
 void BatLedgerClientMojoProxy::GetOneTimeTips(
+    int32_t month,
+    uint32_t year,
     ledger::PublisherInfoListCallback callback) {
   if (!Connected()) {
     callback(ledger::PublisherInfoList(), 0);
@@ -485,6 +487,8 @@ void BatLedgerClientMojoProxy::GetOneTimeTips(
   }
 
   bat_ledger_client_->GetOneTimeTips(
+      month,
+      year,
       base::BindOnce(&OnGetOneTimeTips, std::move(callback)));
 }
 
@@ -831,22 +835,6 @@ void OnGetStatementContribution(
     int32_t result,
     ledger::ContributionInfoList list) {
   callback(ToLedgerResult(result), std::move(list));
-}
-
-void BatLedgerClientMojoProxy::GetStatementOneTimeTips(
-    int32_t month,
-    uint32_t year,
-    ledger::StatementsContributionCallback callback) {
-  if (!Connected()) {
-    ledger::ContributionInfoList list;
-    callback(ledger::Result::LEDGER_ERROR, std::move(list));
-    return;
-  }
-
-  bat_ledger_client_->GetStatementOneTimeTips(
-      month,
-      year,
-      base::BindOnce(&OnGetStatementContribution, std::move(callback)));
 }
 
 void BatLedgerClientMojoProxy::GetStatementRecurringTips(

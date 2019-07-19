@@ -86,7 +86,10 @@ class BatLedgerClientMojoProxy : public ledger::LedgerClient,
                             const std::string& publisher_key,
                             const ledger::REWARDS_CATEGORY category) override;
   void GetRecurringTips(ledger::PublisherInfoListCallback callback) override;
-  void GetOneTimeTips(ledger::PublisherInfoListCallback callback) override;
+  void GetOneTimeTips(
+      int32_t month,
+      uint32_t year,
+      ledger::PublisherInfoListCallback callback) override;
   std::unique_ptr<ledger::LogStream> Log(const char* file,
                                          int line,
                                          ledger::LogLevel level) const override;
@@ -164,11 +167,6 @@ class BatLedgerClientMojoProxy : public ledger::LedgerClient,
       int32_t month,
       uint32_t year,
       ledger::TransactionListCallback callback) override;
-
-  void GetStatementOneTimeTips(
-      int32_t month,
-      uint32_t year,
-      ledger::StatementsContributionCallback callback) override;
 
   void GetStatementRecurringTips(
       int32_t month,

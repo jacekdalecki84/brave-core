@@ -116,7 +116,8 @@ interface BatLedger {
   GetRewardsInternalsInfo() => (string info);
 
   GetRecurringTips() => (array<ledger.mojom.PublisherInfo> list);
-  GetOneTimeTips() => (array<ledger.mojom.PublisherInfo> list);
+  GetOneTimeTips(int32 month, uint32 year) =>
+      (array<ledger.mojom.PublisherInfo> list);
 
   GetActivityInfoList(uint32 start, uint32 limit, string json_filter) =>
       (array<ledger.mojom.PublisherInfo> list, uint32 number);
@@ -150,9 +151,6 @@ interface BatLedger {
 
   GetAllTransactions(int32 month, uint32 year) =>
       (ledger.mojom.MonthlyStatements? monthly_statements);
-
-  GetStatementOneTimeTips(int32 month, uint32 year) =>
-      (array<ledger.mojom.ContributionInfo> list);
 
   GetStatementRecurringTips(int32 month, uint32 year) =>
       (array<ledger.mojom.ContributionInfo> list);
@@ -199,7 +197,7 @@ interface BatLedgerClient {
   GetRecurringTips() => (
       array<ledger.mojom.PublisherInfo> publisher_info_list,
       uint32 next_record);
-  GetOneTimeTips() => (
+  GetOneTimeTips(int32 month, uint32 year) => (
       array<ledger.mojom.PublisherInfo> publisher_info_list,
       uint32 next_record);
 
@@ -263,12 +261,6 @@ interface BatLedgerClient {
       int32 month, uint32 year) => (
       ledger.mojom.AllTransactions? transactions,
       uint32 next_record);
-
-  GetStatementOneTimeTips(
-      int32 month,
-      uint32 year) =>
-        (int32 result,
-        array<ledger.mojom.ContributionInfo> list);
 
   GetStatementRecurringTips(
       int32 month,

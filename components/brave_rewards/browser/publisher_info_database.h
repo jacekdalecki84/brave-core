@@ -115,11 +115,6 @@ class PublisherInfoDatabase {
       int32_t month,
       uint32_t year);
 
-  void GetOneTimeTipsContributions(
-      ledger::ContributionInfoList* list,
-      int32_t month,
-      uint32_t year);
-
   void GetRecurringTipsContributions(
       ledger::ContributionInfoList* list,
       int32_t month,

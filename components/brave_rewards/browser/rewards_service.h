@@ -259,7 +259,7 @@ class RewardsService : public KeyedService {
   virtual void GetOneTimeTipsStatements(
       int32_t month,
       uint32_t year,
-      GetContributionStatementsCallback callback) = 0;
+      GetRecurringTipsCallback callback) = 0;
 
   virtual void GetRecurringTipsStatements(
       int32_t month,

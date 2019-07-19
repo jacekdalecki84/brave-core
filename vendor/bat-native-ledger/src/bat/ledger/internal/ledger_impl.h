@@ -301,7 +301,10 @@ class LedgerImpl : public ledger::Ledger,
 
   void GetRecurringTips(ledger::PublisherInfoListCallback callback) override;
 
-  void GetOneTimeTips(ledger::PublisherInfoListCallback callback) override;
+  void GetOneTimeTips(
+      int32_t month,
+      uint32_t year,
+      ledger::PublisherInfoListCallback callback) override;
 
   void RemoveRecurringTip(const std::string& publisher_key) override;
 
@@ -491,11 +494,6 @@ class LedgerImpl : public ledger::Ledger,
 
   void GetAllTransactions(
       const ledger::MonthlyStatementCallback& callback,
-      ledger::ACTIVITY_MONTH month,
-      uint32_t year) override;
-
-  void GetOneTimeTipsStatements(
-      const ledger::GetContributionStatementsCallback& callback,
       ledger::ACTIVITY_MONTH month,
       uint32_t year) override;
 

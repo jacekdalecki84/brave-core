@@ -922,8 +922,12 @@ void LedgerImpl::GetRecurringTips(
 }
 
 void LedgerImpl::GetOneTimeTips(
+    int32_t month,
+    uint32_t year,
     ledger::PublisherInfoListCallback callback) {
   ledger_client_->GetOneTimeTips(
+      month,
+      year,
       std::bind(&LedgerImpl::ModifyPublisherListVerified,
                 this,
                 _1,
@@ -1765,20 +1769,6 @@ void LedgerImpl::OnGetContributionStatments(
   }
 }
 
-void LedgerImpl::GetOneTimeTipsStatements(
-    const ledger::GetContributionStatementsCallback& callback,
-    ledger::ACTIVITY_MONTH month,
-    uint32_t year) {
-  ledger_client_->GetStatementOneTimeTips(
-      month,
-      year,
-      std::bind(&LedgerImpl::OnGetContributionStatments,
-              this,
-              _1,
-              _2,
-              callback));
-}
-
 void LedgerImpl::GetRecurringTipsStatements(
     const ledger::GetContributionStatementsCallback& callback,
     ledger::ACTIVITY_MONTH month,
@@ -1808,14 +1798,23 @@ void LedgerImpl::OnGetAutoContributionStatments(
       base::Time::Exploded exploded;
       base::Time::Exploded contr_explode;
       base::Time::FromJsTime(submission_stamp).LocalExplode(&exploded);
-      base::Time::FromJsTime(contribution->date).LocalExplode(&contr_explode);
+      base::Time::FromJsTime(contribution->date * 1000).LocalExplode(&contr_explode);
+      LOG(ERROR) << "========sub stamps: " << contribution->date << " and " << std::to_string(submission_stamp);
+      LOG(ERROR) << "========GOING INTO AUTOCONTRIBUTE";
+      LOG(ERROR) << "MONTH: " << exploded.month << " contr_month: " << contr_explode.month;
+      LOG(ERROR) << "year: " << exploded.year << " year: " << contr_explode.year;
+      LOG(ERROR) << "day_of_month: " << exploded.day_of_month << " day_of_month: " << contr_explode.day_of_month;
+      LOG(ERROR) << "hour: " << exploded.hour << " hour: " << contr_explode.hour;
+      LOG(ERROR) << "minute: " << exploded.minute << " minute: " << contr_explode.minute;
       // TODO(jsadler) Transactions need to move to db to reliably retrieve
       // auto contribute transactions
       if (exploded.month == contr_explode.month &&
           exploded.year == contr_explode.year &&
           exploded.day_of_month == contr_explode.day_of_month &&
           exploded.hour == contr_explode.hour &&
-          exploded.minute == contr_explode.minute) {
+          exploded.minute == contr_explode.minute &&
+          exploded.second == contr_explode.second) {
+            LOG(ERROR) << "---match---\n";
         for (size_t b_ix = 0; b_ix < tx.ballots_.size(); b_ix++) {
           double product(
               static_cast<double>(tx.ballots_[b_ix].offset_) /

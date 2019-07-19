@@ -296,41 +296,6 @@ void PublisherInfoDatabase::GetTransactionTypes(
   }
 }
 
-void PublisherInfoDatabase::GetOneTimeTipsContributions(
-    ledger::ContributionInfoList* list,
-    int32_t month,
-    uint32_t year) {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-
-  bool initialized = Init();
-  DCHECK(initialized);
-
-  if (!initialized) {
-    return;
-  }
-
-  sql::Statement info_sql(db_.GetUniqueStatement(
-      "SELECT ci.publisher_id, ci.probi, ci.date, ci.category "
-      "FROM contribution_info as ci "
-      "WHERE ci.month = ? AND ci.year = ? "
-      "AND ci.category = ?"));
-
-  info_sql.BindInt(0, month);
-  info_sql.BindInt(1, year);
-  info_sql.BindInt(2, ledger::REWARDS_CATEGORY::ONE_TIME_TIP);
-
-  while (info_sql.Step()) {
-    ledger::ContributionInfoPtr contribution = ledger::ContributionInfo::New();
-
-    contribution->publisher_key = info_sql.ColumnString(0);
-    contribution->value = info_sql.ColumnDouble(1);
-    contribution->date = info_sql.ColumnInt64(2);
-    contribution->category = info_sql.ColumnInt(3);
-
-    list->push_back(std::move(contribution));
-  }
-}
-
 void PublisherInfoDatabase::GetRecurringTipsContributions(
     ledger::ContributionInfoList* list,
     int32_t month,
@@ -403,8 +368,8 @@ void PublisherInfoDatabase::GetAutoContributions(
 }
 
 void PublisherInfoDatabase::GetOneTimeTips(ledger::PublisherInfoList* list,
-                                           ledger::ACTIVITY_MONTH month,
-                                           int year) {
+                                          ledger::ACTIVITY_MONTH month,
+                                          int year) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   bool initialized = Init();

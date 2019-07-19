@@ -241,7 +241,11 @@ class LEDGER_EXPORT Ledger {
 
   virtual void GetRecurringTips(ledger::PublisherInfoListCallback callback) = 0;
 
-  virtual void GetOneTimeTips(ledger::PublisherInfoListCallback callback) = 0;
+  virtual void GetOneTimeTips(
+      int32_t month,
+      uint32_t year,
+      ledger::PublisherInfoListCallback callback) = 0;
+
   virtual void RefreshPublisher(
       const std::string& publisher_key,
       ledger::OnRefreshPublisherCallback callback) = 0;
@@ -279,11 +283,6 @@ class LEDGER_EXPORT Ledger {
 
   virtual void GetAllTransactions(
       const ledger::MonthlyStatementCallback& callback,
-      ledger::ACTIVITY_MONTH month,
-      uint32_t year) = 0;
-
-  virtual void GetOneTimeTipsStatements(
-      const ledger::GetContributionStatementsCallback& callback,
       ledger::ACTIVITY_MONTH month,
       uint32_t year) = 0;
 

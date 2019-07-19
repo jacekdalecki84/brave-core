@@ -295,7 +295,7 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
       }
       break
     }
-    case types.REFRESH_STATEMENTS: {
+    case types.CLEAR_STATEMENTS: {
       state = { ...state }
       state.monthlyOneTimeTips = []
       state.monthlyRecurringTips = []
