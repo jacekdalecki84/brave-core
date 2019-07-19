@@ -307,10 +307,7 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
         state.monthlyOneTimeTips = []
       }
 
-      state.monthlyOneTimeTips.push({
-        contribution: action.payload.contribution,
-        publisher: action.payload.publisher
-      })
+      state.monthlyOneTimeTips = action.payload.publishers
       break
     }
     case types.ADD_RECURRING_TIP_CONTRIBUTION: {
@@ -334,6 +331,9 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
         publisher: action.payload.publisher
       })
       break
+    }
+    case types.ADD_TRANSACTION: {
+      state.monthlyTransactions = action.payload.monthlyTransactions
     }
   }
 

@@ -177,7 +177,7 @@ window.cr.define('brave_rewards', function () {
     getActions().onGetMonthlyStatements(monthlyStatement)
   }
 
-  function onGetMonthlyOneTimeTips (monthlyOneTimeTips: Rewards.MonthlyOneTimeTips) {
+  function onGetMonthlyOneTimeTips (monthlyOneTimeTips: Rewards.Publisher) {
     getActions().onGetMonthlyOneTimeTips(monthlyOneTimeTips)
   }
 

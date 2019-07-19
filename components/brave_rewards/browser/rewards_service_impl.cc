@@ -3463,7 +3463,7 @@ void RewardsServiceImpl::GetMonthlyStatements(
           std::move(callback)));
 }
 
-void RewardsServiceImpl::OnGetContributionStatments(
+void RewardsServiceImpl::OnGetContributionStatements(
     GetContributionStatementsCallback callback,
     ledger::ContributionInfoList list) {
   std::unique_ptr<ContributionInfoList> contribution_list =
@@ -3501,7 +3501,7 @@ void RewardsServiceImpl::GetRecurringTipsStatements(
     return;
   }
   bat_ledger_->GetStatementRecurringTips(month, year,
-      base::BindOnce(&RewardsServiceImpl::OnGetContributionStatments,
+      base::BindOnce(&RewardsServiceImpl::OnGetContributionStatements,
           AsWeakPtr(),
           std::move(callback)));
 }
@@ -3514,7 +3514,22 @@ void RewardsServiceImpl::GetAutoContributeStatements(
     return;
   }
   bat_ledger_->GetStatementAutoContribute(month, year,
-      base::BindOnce(&RewardsServiceImpl::OnGetContributionStatments,
+      base::BindOnce(&RewardsServiceImpl::OnGetContributionStatements,
+          AsWeakPtr(),
+          std::move(callback)));
+}
+
+void RewardsServiceImpl::GetTransactionStatements(
+      int32_t month,
+      uint32_t year,
+      GetContributionStatementsCallback callback) {
+  if (!Connected()) {
+    return;
+  }
+  bat_ledger_->GetContributions(
+      month,
+      year,
+      base::BindOnce(&RewardsServiceImpl::OnGetContributionStatements,
           AsWeakPtr(),
           std::move(callback)));
 }

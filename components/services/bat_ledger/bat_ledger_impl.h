@@ -204,6 +204,11 @@ class BatLedgerImpl : public mojom::BatLedger,
       uint32_t year,
       GetStatementAutoContributeCallback callback) override;
 
+  void GetContributions(
+    int32_t month,
+    uint32_t year,
+    GetContributionsCallback callback) override;
+
  private:
   void SetCatalogIssuers(const std::string& info) override;
   void ConfirmAd(const std::string& info) override;
@@ -309,6 +314,10 @@ class BatLedgerImpl : public mojom::BatLedger,
 
   static void OnGetStatementAutoContribute(
       CallbackHolder<GetStatementAutoContributeCallback>* holder,
+      ledger::ContributionInfoList contributions);
+
+  static void OnGetContributions(
+      CallbackHolder<GetContributionsCallback>* holder,
       ledger::ContributionInfoList contributions);
 
   std::unique_ptr<BatLedgerClientMojoProxy> bat_ledger_client_mojo_proxy_;

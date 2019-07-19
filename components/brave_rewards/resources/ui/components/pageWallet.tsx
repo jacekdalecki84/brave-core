@@ -76,12 +76,8 @@ class PageWallet extends React.Component<Props, State> {
   }
 
   getMonthlyStatementItems (month: number, year: number) {
-    this.getOneTimeTipStatements(month, year, (contributions: Rewards.Contribution[]) => {
-      for (const contribution of contributions) {
-        this.getPublisherInfo(contribution.publisherKey, (publisher: Rewards.Publisher) => {
-          this.actions.addOneTimeTipContribution(contribution, publisher)
-        })
-      }
+    this.getOneTimeTipStatements(month, year, (publishers: Rewards.Publisher[]) => {
+      this.actions.addOneTimeTipContribution(publishers)
     })
 
     this.getRecurringTipStatements(month, year, (contributions: Rewards.Contribution[]) => {
@@ -99,13 +95,17 @@ class PageWallet extends React.Component<Props, State> {
         })
       }
     })
+
+    this.getTransactions(month, year, (contributions: Rewards.Contribution[]) => {
+      this.actions.addTransactions(contributions)
+    })
   }
 
-  getOneTimeTipStatements = (month: number, year: number, callback: (contributions: Rewards.Contribution[]) => void) => {
+  getOneTimeTipStatements = (month: number, year: number, callback: (publisher: Rewards.Publisher[]) => void) => {
     window.cr.sendWithPromise('brave_rewards.getOneTimeTipsStatements',
       month,
-      year).then((contributions: Rewards.Contribution[]) => {
-      callback(contributions)
+      year).then((publishers: Rewards.Publisher[]) => {
+      callback(publishers)
     })
   }
 
@@ -119,6 +119,14 @@ class PageWallet extends React.Component<Props, State> {
 
   getAutoContributeStatements = (month: number, year: number, callback: (contributions: Rewards.Contribution[]) => void) => {
     window.cr.sendWithPromise('brave_rewards.getAutoContributeStatements',
+    month,
+    year).then((contributions: Rewards.Contribution[]) => {
+      callback(contributions)
+    })
+  }
+
+  getTransactions = (month: number, year: number, callback: (contributions: Rewards.Contribution[]) => void) => {
+    window.cr.sendWithPromise('brave_rewards.getTransactionStatements',
     month,
     year).then((contributions: Rewards.Contribution[]) => {
       callback(contributions)
@@ -556,42 +564,42 @@ class PageWallet extends React.Component<Props, State> {
     })
   }
 
-  getTipRows = (rows: Rewards.MonthlyRecurringTips[] | Rewards.MonthlyOneTimeTips[]): ContributeRows[] => {
+  getOneTimeTipRows = (rows: Rewards.Publisher[]): ContributeRows[] => {
     const { balance } = this.props.rewardsData
-    return rows.map((item: Rewards.MonthlyRecurringTips | Rewards.MonthlyOneTimeTips) => {
-      let faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.url}`
-      if (item.publisher.favIcon && item.publisher.verified) {
-        faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.favIcon}`
+    return rows.map((item: Rewards.Publisher) => {
+      let faviconUrl = `chrome://favicon/size/48@1x/${item.url}`
+      if (item.favIcon && item.verified) {
+        faviconUrl = `chrome://favicon/size/48@1x/${item.favIcon}`
       }
       let tipMonth = ''
       let tipDayOfMonth = ''
-      if (item.contribution.category === 8) {
-        let tipDate = new Date(parseInt(item.contribution.date, 10) * 1000)
+      if (item.tipDate) {
+        let tipDate = new Date(item.tipDate * 1000)
         tipMonth = tipDate.toLocaleString(navigator.language, { month: 'short' })
         tipDayOfMonth = tipDate.getDate().toString()
       }
 
-      const amountValue = utils.convertProbiToFixed(item.contribution.probi)
+      const amountValue = utils.convertProbiToFixed(item.percentage.toString())
       return {
         profile: {
-          name: item.publisher.name,
-          verified: item.publisher.verified,
-          provider: (item.publisher.provider ? item.publisher.provider : undefined) as Provider,
+          name: item.name,
+          verified: item.verified,
+          provider: (item.provider ? item.provider : undefined) as Provider,
           src: faviconUrl
         },
-        url: item.publisher.url,
+        url: item.url,
         token: {
           value: amountValue,
           converted: amountValue !== '0.0' ? utils.convertBalance(amountValue, balance.rates) : '0.00'
         },
-        tipDate: tipMonth !== '' && tipDayOfMonth !== '' && item.contribution.category === 8 ? tipMonth + ' ' + tipDayOfMonth : ''
+        tipDate: tipMonth !== '' && tipDayOfMonth !== '' ? tipMonth + ' ' + tipDayOfMonth : ''
       }
     })
   }
 
-  getACRows = (rows: Rewards.MonthlyRecurringTips[] | Rewards.MonthlyOneTimeTips[]): ContributeRows[] => {
+  getMonthlyRows = (rows: Rewards.MonthlyRecurringTips[] | Rewards.MonthlyAutoContribute[]): ContributeRows[] => {
     const { balance } = this.props.rewardsData
-    return rows.map((item: Rewards.MonthlyRecurringTips | Rewards.MonthlyOneTimeTips) => {
+    return rows.map((item: Rewards.MonthlyRecurringTips | Rewards.MonthlyAutoContribute) => {
       let faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.url}`
       if (item.publisher.favIcon && item.publisher.verified) {
         faviconUrl = `chrome://favicon/size/48@1x/${item.publisher.favIcon}`
@@ -624,17 +632,17 @@ class PageWallet extends React.Component<Props, State> {
 
   getMonthlyStatementAutoContribute = (): ContributeRows[] => {
     const { monthlyAutoContribute } = this.props.rewardsData
-    return this.getACRows(monthlyAutoContribute)
+    return this.getMonthlyRows(monthlyAutoContribute)
   }
 
   getMonthlyStatementMonthlyContributions = (): ContributeRows[] => {
     const { monthlyRecurringTips } = this.props.rewardsData
-    return this.getTipRows(monthlyRecurringTips)
+    return this.getMonthlyRows(monthlyRecurringTips)
   }
 
   getMonthlyStatementTips = (): ContributeRows[] => {
     const { monthlyOneTimeTips } = this.props.rewardsData
-    return this.getTipRows(monthlyOneTimeTips)
+    return this.getOneTimeTipRows(monthlyOneTimeTips)
   }
 
   onMonthChange = (key: string) => {

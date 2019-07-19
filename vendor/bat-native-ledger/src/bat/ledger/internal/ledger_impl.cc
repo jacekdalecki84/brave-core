@@ -1760,7 +1760,7 @@ void LedgerImpl::GetAllTransactions(
                 callback));
 }
 
-void LedgerImpl::OnGetContributionStatments(
+void LedgerImpl::OnGetContributionStatements(
     ledger::Result result,
     ledger::ContributionInfoList contributions,
     ledger::GetContributionStatementsCallback callback) {
@@ -1776,7 +1776,7 @@ void LedgerImpl::GetRecurringTipsStatements(
   ledger_client_->GetStatementRecurringTips(
       month,
       year,
-      std::bind(&LedgerImpl::OnGetContributionStatments,
+      std::bind(&LedgerImpl::OnGetContributionStatements,
               this,
               _1,
               _2,

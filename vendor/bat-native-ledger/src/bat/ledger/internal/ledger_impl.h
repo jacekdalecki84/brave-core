@@ -610,7 +610,7 @@ class LedgerImpl : public ledger::Ledger,
       uint32_t year,
       const ledger::MonthlyStatementCallback& callback);
 
-  void OnGetContributionStatments(
+  void OnGetContributionStatements(
       ledger::Result result,
       ledger::ContributionInfoList list,
       ledger::GetContributionStatementsCallback callback);

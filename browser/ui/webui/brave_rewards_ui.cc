@@ -237,6 +237,12 @@ class RewardsDOMHandler : public WebUIMessageHandler,
       const std::string& webui_callback_id,
       std::unique_ptr<brave_rewards::ContentSiteList> list);
 
+  void GetTransactionStatements(const base::ListValue* args);
+
+  void OnGetTransactionStatements(
+      const std::string& webui_callback_id,
+      std::unique_ptr<brave_rewards::ContributionInfoList> contributions);
+
   base::Value ContentSiteListToJS(
       std::unique_ptr<brave_rewards::ContentSiteList> list);
 
@@ -853,6 +859,7 @@ base::Value RewardsDOMHandler::ContentSiteToJS(
   publisher.SetStringKey("provider", content_site.provider);
   publisher.SetStringKey("url", content_site.url);
   publisher.SetStringKey("favIcon", content_site.favicon_url);
+  publisher.SetIntKey("tipDate", content_site.reconcile_stamp);
   return publisher;
 }
 
@@ -1349,8 +1356,8 @@ void RewardsDOMHandler::GetRecurringTipsStatements(
       month,
       (uint32_t)year,
       base::BindOnce(&RewardsDOMHandler::OnGetContributionStatements,
-      weak_factory_.GetWeakPtr(),
-      webui_callback_id));
+          weak_factory_.GetWeakPtr(),
+          webui_callback_id));
 }
 
 void RewardsDOMHandler::GetAutoContributeStatements(
@@ -1367,8 +1374,8 @@ void RewardsDOMHandler::GetAutoContributeStatements(
       month,
       (uint32_t)year,
       base::BindOnce(&RewardsDOMHandler::OnGetContributionStatements,
-      weak_factory_.GetWeakPtr(),
-      webui_callback_id));
+          weak_factory_.GetWeakPtr(),
+          webui_callback_id));
 }
 
 void RewardsDOMHandler::OnGetPublisherInfoList(
@@ -1379,6 +1386,30 @@ void RewardsDOMHandler::OnGetPublisherInfoList(
   ResolveJavascriptCallback(
       base::Value(webui_callback_id),
       std::move(publishers));
+}
+
+void RewardsDOMHandler::OnGetTransactionStatements(
+    const std::string& webui_callback_id,
+    std::unique_ptr<brave_rewards::ContributionInfoList> contributions) {
+
+}
+
+void RewardsDOMHandler::GetTransactionStatements(
+    const base::ListValue* args) {
+  CHECK_EQ(3U, args->GetSize());
+  std::string webui_callback_id = args->GetList()[0].GetString();
+  if (!rewards_service_) {
+    return;
+  }
+  int32_t month = args->GetList()[1].GetInt();
+  int32_t year = args->GetList()[2].GetInt();
+
+  rewards_service_->GetTransactionStatements(
+      month,
+      (uint32_t)year,
+      base::BindOnce(&RewardsDOMHandler::OnGetContributionStatements,
+          weak_factory_.GetWeakPtr(),
+          webui_callback_id));
 }
 
 void RewardsDOMHandler::OnGetPublisherInfo(

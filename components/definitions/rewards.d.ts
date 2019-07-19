@@ -64,9 +64,10 @@ declare namespace Rewards {
       reconcileStamp: string,
       transactions: MonthlyTransaction[]
     }
-    monthlyOneTimeTips: MonthlyOneTimeTips[]
-    monthlyRecurringTips: MonthlyRecurringTips[]
     monthlyAutoContribute: MonthlyAutoContribute[]
+    monthlyOneTimeTips: Publisher[]
+    monthlyRecurringTips: MonthlyRecurringTips[]
+    monthlyTransactions: Contribution[]
     monthsAvailable?: string[]
     pendingContributions: PendingContribution[]
     pendingContributionTotal: number
@@ -168,11 +169,6 @@ declare namespace Rewards {
     date: string
     percentage: string
     reconcileStamp: string
-  }
-
-  export interface MonthlyOneTimeTips {
-    contribution: Contribution
-    publisher: Publisher
   }
 
   export interface MonthlyRecurringTips {

@@ -231,9 +231,8 @@ export const onBalance = (status: number, balance: Rewards.Balance) => action(ty
 
 export const clearStatements = () => action(types.CLEAR_STATEMENTS)
 
-export const addOneTimeTipContribution = (contribution: Rewards.Contribution, publisher: Rewards.Publisher) => action(types.ADD_ONE_TIME_TIP_CONTRIBUTION, {
-  contribution,
-  publisher
+export const addOneTimeTipContribution = (publishers: Rewards.Publisher) => action(types.ADD_ONE_TIME_TIP_CONTRIBUTION, {
+  publishers
 })
 
 export const addRecurringTipContribution = (contribution: Rewards.Contribution, publisher: Rewards.Publisher) => action(types.ADD_RECURRING_TIP_CONTRIBUTION, {
@@ -244,4 +243,8 @@ export const addRecurringTipContribution = (contribution: Rewards.Contribution, 
 export const addAutoContribution = (contribution: Rewards.Contribution, publisher: Rewards.Publisher) => action(types.ADD_AUTO_CONTRIBUTION, {
   contribution,
   publisher
+})
+
+export const addTransactions = (contributions: Rewards.Contribution[]) => action(types.ADD_TRANSACTION, {
+  contributions
 })

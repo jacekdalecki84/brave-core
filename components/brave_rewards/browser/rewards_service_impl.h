@@ -278,6 +278,11 @@ class RewardsServiceImpl : public RewardsService,
       uint32_t year,
       GetContributionStatementsCallback callback) override;
 
+  void GetTransactionStatements(
+      int32_t month,
+      uint32_t year,
+      GetContributionStatementsCallback callback) override;
+
   // Testing methods
   void SetLedgerEnvForTesting();
   void StartMonthlyContributionForTest();
@@ -630,7 +635,7 @@ class RewardsServiceImpl : public RewardsService,
       GetMonthlyStatementListCallback callback,
       ledger::mojom::MonthlyStatementsPtr monthly_statements);
 
-  void OnGetContributionStatments(
+  void OnGetContributionStatements(
       GetContributionStatementsCallback callback,
       ledger::ContributionInfoList list);
 

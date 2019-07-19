@@ -751,4 +751,25 @@ void BatLedgerImpl::GetStatementAutoContribute(
         ToLedgerPublisherMonth(month), year);
 }
 
+void BatLedgerImpl::OnGetContributions(
+    CallbackHolder<GetContributionsCallback>* holder,
+    ledger::ContributionInfoList contributions) {
+  if (holder->is_valid())
+    std::move(holder->get()).Run(std::move(contributions));
+  delete holder;
+}
+
+void BatLedgerImpl::GetContributions(
+    int32_t month,
+    uint32_t year,
+    GetContributionsCallback callback) {
+  auto* holder = new CallbackHolder<GetContributionsCallback>(
+      AsWeakPtr(), std::move(callback));
+
+  ledger_->GetAutoContributeStatements(
+    std::bind(
+      BatLedgerImpl::OnGetContributions, holder, _1),
+        ToLedgerPublisherMonth(month), year);
+}
+
 }  // namespace bat_ledger

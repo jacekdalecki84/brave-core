@@ -271,6 +271,11 @@ class RewardsService : public KeyedService {
       uint32_t year,
       GetContributionStatementsCallback callback) = 0;
 
+  virtual void GetTransactionStatements(
+      int32_t month,
+      uint32_t year,
+      GetContributionStatementsCallback callback) = 0;
+
   virtual void GetPublisherInfo(
       const std::string& publisher_key,
       GetPublisherInfoCallback callback) = 0;

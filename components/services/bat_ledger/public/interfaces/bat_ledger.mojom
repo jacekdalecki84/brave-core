@@ -157,6 +157,9 @@ interface BatLedger {
 
   GetStatementAutoContribute(int32 month, uint32 year) =>
       (array<ledger.mojom.ContributionInfo> list);
+
+  GetContributions(int32 month, uint32 year) =>
+      (array<ledger.mojom.ContributionInfo> list);
 };
 
 interface BatLedgerClient {
