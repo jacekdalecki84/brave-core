@@ -1,5 +1,5 @@
 diff --git a/chrome/android/BUILD.gn b/chrome/android/BUILD.gn
-index 02f17d2b4e93d27964fe6663c4feddccc9634619..3d83dd24cb130db8a52b3bfbe18a8d31161cd27b 100644
+index 02f17d2b4e93d27964fe6663c4feddccc9634619..934bdf202c6da2a917801eccc4d4a04136626b8d 100644
 --- a/chrome/android/BUILD.gn
 +++ b/chrome/android/BUILD.gn
 @@ -38,7 +38,7 @@ if (enable_vr) {
@@ -19,3 +19,11 @@ index 02f17d2b4e93d27964fe6663c4feddccc9634619..3d83dd24cb130db8a52b3bfbe18a8d31
      "//chrome/android/webapk/libs/common:splash_resources",
      "//chrome/app:java_strings_grd",
      "//components/autofill/android:autofill_java_resources",
+@@ -476,6 +477,7 @@ java_group("chrome_all_java") {
+ group("jni_headers") {
+   public_deps = [
+     ":chrome_jni_headers",
++    "//brave/build/android:jni_headers",
+     "//chrome/android/features/autofill_assistant:jni_headers",
+     "//chrome/android/features/media_router:jni_headers",
+   ]
