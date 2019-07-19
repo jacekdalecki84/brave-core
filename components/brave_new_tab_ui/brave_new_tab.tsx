@@ -8,8 +8,7 @@ import { render } from 'react-dom'
 import { Provider } from 'react-redux'
 import Theme from 'brave-ui/theme/brave-default'
 import { ThemeProvider } from 'brave-ui/theme'
-import * as dataFetchAPI from './api/dataFetch'
-import * as preferencesAPI from './api/preferences'
+import wireAPIEventsToStore from './apiEventsToStore'
 
 // Components
 import App from './containers/app'
@@ -22,35 +21,22 @@ import 'emptykit.css'
 import '../fonts/poppins.css'
 import '../fonts/muli.css'
 
-async function initialize () {
+function initialize () {
+  console.timeStamp('loaded')
+  // Get store data going
+  wireAPIEventsToStore()
+  // Get rendering going
   render(
     <Provider store={store}>
       <ThemeProvider theme={Theme}>
         <App />
       </ThemeProvider>
     </Provider>,
-    document.getElementById('root')
+    document.getElementById('root'),
+    () => console.timeStamp('first react render')
   )
   window.i18nTemplate.process(window.document, window.loadTimeData)
-  handleAPIEvents()
-  await updatePreferences()
 }
 
-async function updatePreferences () {
-  const preferences = await preferencesAPI.getPreferences()
-  const actions = dataFetchAPI.getActions()
-  actions.preferencesUpdated(preferences)
-}
-
-function updateStats () {
-  const actions = dataFetchAPI.getActions()
-  actions.statsUpdated()
-}
-
-function handleAPIEvents () {
-  chrome.send('newTabPageInitialized', [])
-  window.cr.addWebUIListener('stats-updated', updateStats)
-  preferencesAPI.addChangeListener(updatePreferences)
-}
-
+console.timeStamp('JS start')
 document.addEventListener('DOMContentLoaded', initialize)

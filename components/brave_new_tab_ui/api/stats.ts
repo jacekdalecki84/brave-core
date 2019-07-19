@@ -20,22 +20,8 @@ export type Stats = {
 
 type StatsUpdatedHandler = (statsData: Stats) => void
 
-function getWebUIInteger (key: string): number {
-  return window.loadTimeData.getInteger(key)
-}
-
 export function getStats (): Promise<Stats> {
-  // Note(petemill): Returning as promise allows this
-  // to be async even though it isn't right now.
-  // Enforces practice of not setting directly
-  // in a redux reducer.
-  return Promise.resolve({
-    adsBlockedStat: getWebUIInteger('adsBlockedStat'),
-    trackersBlockedStat: getWebUIInteger('trackersBlockedStat'),
-    javascriptBlockedStat: getWebUIInteger('javascriptBlockedStat'),
-    httpsUpgradesStat: getWebUIInteger('httpsUpgradesStat'),
-    fingerprintingBlockedStat: getWebUIInteger('fingerprintingBlockedStat')
-  })
+  return window.cr.sendWithPromise<Stats>('getNewTabPageStats')
 }
 
 export function addChangeListener (listener: StatsUpdatedHandler): void {

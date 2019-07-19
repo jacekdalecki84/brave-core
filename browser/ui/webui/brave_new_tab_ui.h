@@ -16,7 +16,6 @@ class BraveNewTabUI : public content::WebUIController {
   BraveNewTabUI(content::WebUI* web_ui, const std::string& name);
   ~BraveNewTabUI() override;
  private:
-
   DISALLOW_COPY_AND_ASSIGN(BraveNewTabUI);
 };
 

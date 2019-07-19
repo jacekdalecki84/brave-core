@@ -101,7 +101,7 @@ class NewTabPage extends React.Component<Props, {}> {
   render () {
     const { newTabData, actions } = this.props
 
-    if (!newTabData || !newTabData.backgroundImage) {
+    if (!newTabData) {
       return null
     }
 

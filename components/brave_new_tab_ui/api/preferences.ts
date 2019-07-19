@@ -19,21 +19,8 @@ export type Preferences = {
 
 type PreferencesUpdatedHandler = (prefData: Preferences) => void
 
-function getWebUIBoolean (key: string): boolean {
-  return window.loadTimeData.getBoolean(key)
-}
-
 export function getPreferences (): Promise<Preferences> {
-  // Note(petemill): Returning as promise allows this
-  // to be async even though it isn't right now.
-  // Enforces practice of not setting directly
-  // in a redux reducer.
-  return Promise.resolve({
-    showBackgroundImage: getWebUIBoolean('showBackgroundImage'),
-    showStats: getWebUIBoolean('showStats'),
-    showClock: getWebUIBoolean('showClock'),
-    showTopSites: getWebUIBoolean('showTopSites')
-  })
+  return window.cr.sendWithPromise<Preferences>('getNewTabPagePreferences')
 }
 
 function sendSavePref (key: string, value: any) {

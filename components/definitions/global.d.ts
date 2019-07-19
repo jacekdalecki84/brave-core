@@ -17,7 +17,7 @@ declare global {
     loadTimeData: loadTimeData
     cr: {
       define: (name: string, init: () => void) => void
-      sendWithPromise: (method: string, ...args: any[]) => any
+      sendWithPromise<T> (method: string, ...args: any[]): Promise<T>
       addWebUIListener: (eventName: string, callback: (...args: any[]) => void) => void
     }
     i18nTemplate: {

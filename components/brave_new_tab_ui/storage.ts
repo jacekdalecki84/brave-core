@@ -2,16 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import * as backgroundAPI from './api/background'
-
 // Utils
 import { debounce } from '../common/debounce'
-import newTab from './containers/newTab';
-import NewPrivateTabPage from './containers/privateTab';
 
 const keyName = 'new-tab-data'
 
 const defaultState: NewTab.State = {
+  initialDataLoaded: false,
   showBackgroundImage: false,
   showStats: false,
   showClock: false,
@@ -36,28 +33,28 @@ const defaultState: NewTab.State = {
   }
 }
 
-export const getLoadTimeData = (state: NewTab.State) => {
-  state = { ...state }
-  state.stats = defaultState.stats
-  if (chrome.extension.inIncognitoContext) {
-    state.isTor = window.loadTimeData.getBoolean('isTor')
-    state.isQwant = window.loadTimeData.getBoolean('isQwant')
-    state.useAlternativePrivateSearchEngine =
-      window.loadTimeData.getBoolean('useAlternativePrivateSearchEngine')
-  }
-  return state
+if (chrome.extension.inIncognitoContext) {
+  defaultState.isTor = window.loadTimeData.getBoolean('isTor')
+  defaultState.isQwant = window.loadTimeData.getBoolean('isQwant')
 }
 
-const cleanData = (state: NewTab.State): NewTab.PersistantState => {
-  state = { ...state }
+const getPersistantData = (state: NewTab.State): NewTab.PersistantState => {
   // Don't save items which we aren't the source
   // of data for.
-  delete state.stats
-  return state
+  const peristantState: NewTab.PersistantState = {
+    topSites: state.topSites,
+    ignoredTopSites: state.ignoredTopSites,
+    pinnedTopSites: state.pinnedTopSites,
+    gridSites: state.gridSites,
+    showEmptyPage: state.showEmptyPage,
+    bookmarks: state.bookmarks
+  }
+
+  return peristantState
 }
 
 export const load = (): NewTab.State => {
-  const data: string | undefined = window.localStorage.getItem(keyName)
+  const data: string | null = window.localStorage.getItem(keyName)
   let state = defaultState
   let storedState: NewTab.PersistantState
   if (data) {
@@ -65,20 +62,19 @@ export const load = (): NewTab.State => {
       storedState = JSON.parse(data)
       // add defaults for non-peristant data
       state = {
-        ...defaultState,
+        ...state,
         ...storedState
       }
     } catch (e) {
       console.error('Could not parse local storage data: ', e)
     }
   }
-  state.backgroundImage = backgroundAPI.randomBackgroundImage()
-  state = getLoadTimeData(state)
   return state
 }
 
 export const debouncedSave = debounce<NewTab.State>((data: NewTab.State) => {
   if (data) {
-    window.localStorage.setItem(keyName, JSON.stringify(cleanData(data)))
+    const dataToSave = getPersistantData(data)
+    window.localStorage.setItem(keyName, JSON.stringify(dataToSave))
   }
 }, 50)

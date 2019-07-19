@@ -29,7 +29,9 @@ class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
   void OnJavascriptAllowed() override;
   void OnJavascriptDisallowed() override;
 
-  void HandleInitialized(const base::ListValue* args);
+  void HandleGetPreferences(const base::ListValue* args);
+  void HandleGetStats(const base::ListValue* args);
+  void HandleGetPrivateProperties(const base::ListValue* args);
   void HandleSaveNewTabPagePref(const base::ListValue* args);
   void HandleToggleAlternativeSearchEngineProvider(
       const base::ListValue* args);

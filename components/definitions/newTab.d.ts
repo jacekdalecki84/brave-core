@@ -46,11 +46,15 @@ declare namespace NewTab {
     pinnedTopSites: Site[]
     gridSites: Site[]
     showEmptyPage: boolean
+    bookmarks: Record<string, Bookmark>
+  }
+
+  export interface EphemeralState {
+    initialDataLoaded: boolean
     isIncognito: boolean
     useAlternativePrivateSearchEngine: boolean
     isTor: boolean
     isQwant: boolean
-    bookmarks: Record<string, Bookmark>
     backgroundImage?: Image
     gridLayoutSize?: 'small'
     showSiteRemovalNotification?: boolean
@@ -59,10 +63,9 @@ declare namespace NewTab {
     showStats: boolean
     showClock: boolean
     showTopSites: boolean
+    stats: Stats
   }
 
   // In-memory state is a superset of PersistantState
-  export type State = PersistantState & {
-    stats: Stats
-  }
+  export type State = PersistantState & EphemeralState
 }

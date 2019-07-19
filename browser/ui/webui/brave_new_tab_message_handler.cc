@@ -23,54 +23,67 @@ bool IsPrivateNewTab(Profile* profile) {
   return profile->IsTorProfile() || profile->IsIncognitoProfile();
 }
 
-} // namespace
+base::DictionaryValue GetStatsDictionary(PrefService* prefs) {
+  base::DictionaryValue stats_data;
+  stats_data.SetInteger(
+    "adsBlockedStat",
+    prefs->GetUint64(kAdsBlocked));
+  stats_data.SetInteger(
+    "trackersBlockedStat",
+    prefs->GetUint64(kTrackersBlocked));
+  stats_data.SetInteger(
+    "javascriptBlockedStat",
+    prefs->GetUint64(kJavascriptBlocked));
+  stats_data.SetInteger(
+    "httpsUpgradesStat",
+    prefs->GetUint64(kHttpsUpgrades));
+  stats_data.SetInteger(
+    "fingerprintingBlockedStat",
+    prefs->GetUint64(kFingerprintingBlocked));
+  return stats_data;
+}
+
+base::DictionaryValue GetPreferencesDictionary(PrefService* prefs) {
+  base::DictionaryValue pref_data;
+  pref_data.SetBoolean(
+      "showBackgroundImage",
+      prefs->GetBoolean(kNewTabPageShowBackgroundImage));
+  pref_data.SetBoolean(
+      "showClock",
+      prefs->GetBoolean(kNewTabPageShowClock));
+  pref_data.SetBoolean(
+      "showTopSites",
+      prefs->GetBoolean(kNewTabPageShowTopSites));
+  pref_data.SetBoolean(
+      "showStats",
+      prefs->GetBoolean(kNewTabPageShowStats));
+  return pref_data;
+}
+
+base::DictionaryValue GetPrivatePropertiesDictionary(PrefService* prefs) {
+  base::DictionaryValue private_data;
+  private_data.SetBoolean(
+      "useAlternativePrivateSearchEngine",
+      prefs->GetBoolean(kUseAlternativeSearchEngineProvider));
+  return private_data;
+}
+
+}  // namespace
 
 // static
 BraveNewTabMessageHandler* BraveNewTabMessageHandler::Create(
       content::WebUIDataSource* source, Profile* profile) {
   //
   // Initial Values
+  // Should only contain data that is static
   //
-  // Stats
-  PrefService* prefs = profile->GetPrefs();
-  source->AddInteger(
-    "adsBlockedStat",
-    prefs->GetUint64(kAdsBlocked));
-  source->AddInteger(
-    "trackersBlockedStat",
-    prefs->GetUint64(kTrackersBlocked));
-  source->AddInteger(
-    "javascriptBlockedStat",
-    prefs->GetUint64(kJavascriptBlocked));
-  source->AddInteger(
-    "httpsUpgradesStat",
-    prefs->GetUint64(kHttpsUpgrades));
-  source->AddInteger(
-    "fingerprintingBlockedStat",
-    prefs->GetUint64(kFingerprintingBlocked));
   // Private Tab info
   if (IsPrivateNewTab(profile)) {
-    source->AddBoolean(
-      "useAlternativePrivateSearchEngine",
-      prefs->GetBoolean(kUseAlternativeSearchEngineProvider));
     source->AddBoolean(
       "isTor", profile->IsTorProfile());
     source->AddBoolean(
       "isQwant", brave::IsRegionForQwant(profile));
   }
-  // Preferences
-  source->AddBoolean(
-      "showBackgroundImage",
-      prefs->GetBoolean(kNewTabPageShowBackgroundImage));
-  source->AddBoolean(
-      "showClock",
-      prefs->GetBoolean(kNewTabPageShowClock));
-  source->AddBoolean(
-      "showTopSites",
-      prefs->GetBoolean(kNewTabPageShowTopSites));
-  source->AddBoolean(
-      "showStats",
-      prefs->GetBoolean(kNewTabPageShowStats));
   return new BraveNewTabMessageHandler(profile);
 }
 
@@ -79,6 +92,40 @@ BraveNewTabMessageHandler::BraveNewTabMessageHandler(Profile* profile)
 }
 
 BraveNewTabMessageHandler::~BraveNewTabMessageHandler() {}
+
+void BraveNewTabMessageHandler::RegisterMessages() {
+  // TODO(petemill): This MessageHandler can be split up to
+  // individual MessageHandlers for each individual topic area,
+  // should other WebUI pages wish to consume the APIs:
+  // - Stats
+  // - Preferences
+  // - PrivatePage properties
+  web_ui()->RegisterMessageCallback(
+    "getNewTabPagePreferences",
+    base::BindRepeating(
+      &BraveNewTabMessageHandler::HandleGetPreferences,
+      base::Unretained(this)));
+  web_ui()->RegisterMessageCallback(
+    "getNewTabPageStats",
+    base::BindRepeating(
+      &BraveNewTabMessageHandler::HandleGetStats,
+      base::Unretained(this)));
+  web_ui()->RegisterMessageCallback(
+    "getNewTabPagePrivateProperties",
+    base::BindRepeating(
+      &BraveNewTabMessageHandler::HandleGetPrivateProperties,
+      base::Unretained(this)));
+  web_ui()->RegisterMessageCallback(
+    "toggleAlternativePrivateSearchEngine",
+    base::BindRepeating(
+      &BraveNewTabMessageHandler::HandleToggleAlternativeSearchEngineProvider,
+      base::Unretained(this)));
+  web_ui()->RegisterMessageCallback(
+    "saveNewTabPagePref",
+    base::BindRepeating(
+      &BraveNewTabMessageHandler::HandleSaveNewTabPagePref,
+      base::Unretained(this)));
+}
 
 void BraveNewTabMessageHandler::OnJavascriptAllowed() {
   // Observe relevant preferences
@@ -122,26 +169,27 @@ void BraveNewTabMessageHandler::OnJavascriptDisallowed() {
   pref_change_registrar_.RemoveAll();
 }
 
-void BraveNewTabMessageHandler::RegisterMessages() {
-  web_ui()->RegisterMessageCallback(
-    "newTabPageInitialized",
-    base::BindRepeating(
-      &BraveNewTabMessageHandler::HandleInitialized,
-      base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-    "toggleAlternativePrivateSearchEngine",
-    base::BindRepeating(
-      &BraveNewTabMessageHandler::HandleToggleAlternativeSearchEngineProvider,
-      base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-    "saveNewTabPagePref",
-    base::BindRepeating(
-      &BraveNewTabMessageHandler::HandleSaveNewTabPagePref,
-      base::Unretained(this)));
+void BraveNewTabMessageHandler::HandleGetPreferences(
+        const base::ListValue* args) {
+  AllowJavascript();
+  PrefService* prefs = profile_->GetPrefs();
+  auto data = GetPreferencesDictionary(prefs);
+  ResolveJavascriptCallback(args->GetList()[0], data);
 }
 
-void BraveNewTabMessageHandler::HandleInitialized(const base::ListValue* args) {
+void BraveNewTabMessageHandler::HandleGetStats(const base::ListValue* args) {
   AllowJavascript();
+  PrefService* prefs = profile_->GetPrefs();
+  auto data = GetStatsDictionary(prefs);
+  ResolveJavascriptCallback(args->GetList()[0], data);
+}
+
+void BraveNewTabMessageHandler::HandleGetPrivateProperties(
+        const base::ListValue* args) {
+  AllowJavascript();
+  PrefService* prefs = profile_->GetPrefs();
+  auto data = GetPrivatePropertiesDictionary(prefs);
+  ResolveJavascriptCallback(args->GetList()[0], data);
 }
 
 void BraveNewTabMessageHandler::HandleToggleAlternativeSearchEngineProvider(
@@ -185,48 +233,18 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
 
 void BraveNewTabMessageHandler::OnPrivatePropertiesChanged() {
   PrefService* prefs = profile_->GetPrefs();
-  base::DictionaryValue private_data;
-  private_data.SetBoolean(
-      "useAlternativePrivateSearchEngine",
-      prefs->GetBoolean(kUseAlternativeSearchEngineProvider));
-  FireWebUIListener("private-tab-data-updated", private_data);
+  auto data = GetPrivatePropertiesDictionary(prefs);
+  FireWebUIListener("private-tab-data-updated", data);
 }
 
 void BraveNewTabMessageHandler::OnStatsChanged() {
   PrefService* prefs = profile_->GetPrefs();
-  base::DictionaryValue stats_data;
-  stats_data.SetInteger(
-    "adsBlockedStat",
-    prefs->GetUint64(kAdsBlocked));
-  stats_data.SetInteger(
-    "trackersBlockedStat",
-    prefs->GetUint64(kTrackersBlocked));
-  stats_data.SetInteger(
-    "javascriptBlockedStat",
-    prefs->GetUint64(kJavascriptBlocked));
-  stats_data.SetInteger(
-    "httpsUpgradesStat",
-    prefs->GetUint64(kHttpsUpgrades));
-  stats_data.SetInteger(
-    "fingerprintingBlockedStat",
-    prefs->GetUint64(kFingerprintingBlocked));
-  FireWebUIListener("stats-updated", stats_data);
+  auto data = GetStatsDictionary(prefs);
+  FireWebUIListener("stats-updated", data);
 }
 
 void BraveNewTabMessageHandler::OnPreferencesChanged() {
   PrefService* prefs = profile_->GetPrefs();
-  base::DictionaryValue pref_data;
-  pref_data.SetBoolean(
-      "showBackgroundImage",
-      prefs->GetBoolean(kNewTabPageShowBackgroundImage));
-  pref_data.SetBoolean(
-      "showClock",
-      prefs->GetBoolean(kNewTabPageShowClock));
-  pref_data.SetBoolean(
-      "showTopSites",
-      prefs->GetBoolean(kNewTabPageShowTopSites));
-  pref_data.SetBoolean(
-      "showStats",
-      prefs->GetBoolean(kNewTabPageShowStats));
-  FireWebUIListener("preferences-changed", pref_data);
+  auto data = GetPreferencesDictionary(prefs);
+  FireWebUIListener("preferences-changed", data);
 }

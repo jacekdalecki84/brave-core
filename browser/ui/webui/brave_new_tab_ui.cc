@@ -17,7 +17,7 @@
 #include "content/public/browser/web_ui_data_source.h"
 
 BraveNewTabUI::BraveNewTabUI(content::WebUI* web_ui, const std::string& name)
-   : WebUIController(web_ui) {
+        : WebUIController(web_ui) {
   Profile* profile = Profile::FromWebUI(web_ui);
   content::WebUIDataSource* source = CreateBasicUIHTMLSource(profile, name,
       kBraveNewTabGenerated, kBraveNewTabGeneratedSize, IDR_BRAVE_NEW_TAB_HTML);
